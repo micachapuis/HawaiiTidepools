@@ -71,40 +71,79 @@ dh_data <- data %>% filter(site %in% "Diamond Head")
 
 
 ## Data Viz!
+### Combined
+```{r}
+data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) +  geom_point() + theme_minimal() + labs(title = "Temperature")
+```
+
+```{r}
+data %>% ggplot(aes(x = sample_time, y = temp_pool, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "temperature")
+```
+
+
+
+```{r}
+data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH")
+```
+
+```{r}
+data %>% ggplot(aes(x = sample_time, y = pH, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH")
+```
+
+
+```{r}
+data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA")
+```
+```{r}
+data %>% ggplot(aes(x = sample_time, y = alkalinity, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Alkalinity")
+```
+
+
+
+```{r}
+data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity")
+```
+
+
+```{r}
+data %>% ggplot(aes(x = sample_time, y = Salinity_lab, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity")
+```
+
+
 ### Sandy Beach
 ```{r}
-sandy_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+sandy_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Temperature - Sandy Beach")
 ```
 
 
 ```{r}
-sandy_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+sandy_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH - Sandy Beach")
 ```
 
 ```{r}
-sandy_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+sandy_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA - Sandy Beach")
 ```
 
 ```{r}
-sandy_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+sandy_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity - Sandy Beach")
 ```
 
 
 ### Diamond Head 
 ```{r}
-dh_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+dh_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Temperature - Diamond Head")
 ```
 
 
 ```{r}
-dh_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+dh_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH - Diamond Head")
 ```
 
 ```{r}
-dh_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+dh_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA - Diamond Head")
 ```
 
 ```{r}
-dh_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+dh_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity - Diamond Head")
 ```
 

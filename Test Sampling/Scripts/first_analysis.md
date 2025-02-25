@@ -104,54 +104,104 @@ dh_data <- data %>% filter(site %in% "Diamond Head")
 
 ## Data Viz!
 
-### Sandy Beach
+### Combined
 
 ``` r
-sandy_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) +  geom_point() + theme_minimal() + labs(title = "Temperature")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
-sandy_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+data %>% ggplot(aes(x = sample_time, y = temp_pool, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "temperature")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ``` r
-sandy_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
-sandy_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+data %>% ggplot(aes(x = sample_time, y = pH, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
-### Diamond Head
-
 ``` r
-dh_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ``` r
-dh_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+data %>% ggplot(aes(x = sample_time, y = alkalinity, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Alkalinity")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
-dh_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
-dh_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line() + geom_point() + theme_minimal()
+data %>% ggplot(aes(x = sample_time, y = Salinity_lab, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+### Sandy Beach
+
+``` r
+sandy_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Temperature - Sandy Beach")
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+``` r
+sandy_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH - Sandy Beach")
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+``` r
+sandy_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA - Sandy Beach")
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+``` r
+sandy_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity - Sandy Beach")
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+### Diamond Head
+
+``` r
+dh_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Temperature - Diamond Head")
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+
+``` r
+dh_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH - Diamond Head")
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+
+``` r
+dh_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA - Diamond Head")
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+
+``` r
+dh_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity - Diamond Head")
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
