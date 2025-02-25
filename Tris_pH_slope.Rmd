@@ -21,8 +21,8 @@ library(broom)
 
 Bring in pH calibration files and raw data files
 ```{r}
-pHcalib<-read_csv(here("Test Sampling", "tris_calibration.csv"))
-pHData<-read_csv(here("Test Sampling", "Tidepool Data", "tidepool_chemistry.csv"))
+pHcalib<-read_csv(here("Test Sampling", "Data", "tris_calibration.csv"))
+pHData<-read_csv(here("Test Sampling", "Data", "tidepool_chemistry.csv"))
 ```
 
 Take the mV calibration files by each date and use them to calculate pH
@@ -77,6 +77,6 @@ View(pHSlope)
 
 Write the data
 ```{r}
-write_csv(pHSlope, here("Test Sampling", "pHSlope.csv"))
+write_csv(pHSlope, here("Test Sampling", "Data", "pHSlope.csv"))
 ```
 
