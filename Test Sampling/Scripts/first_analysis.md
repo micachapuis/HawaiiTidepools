@@ -34,6 +34,10 @@ library(seacarb)
     ## Loading required package: gsw
     ## Loading required package: SolveSAPHE
 
+``` r
+library(lubridate)
+```
+
 ## Load in Data
 
 ``` r
@@ -95,6 +99,90 @@ Selecting columns
 data <- data %>% select(-observers, -notes, -TA1, -TA)
 ```
 
+Adding in “ocean” as substrate
+
+``` r
+data <- data %>% mutate(substrate = replace_na(substrate, "ocean"))
+```
+
+Salinity Normalize TA
+
+``` r
+data <- data %>% mutate(TA_norm = alkalinity*Salinity_lab/35)
+```
+
+Calculate delta pH and delta TA
+
+``` r
+delta_calc <- data %>% 
+  select(site, pool_number, substrate, time_point, sample_time, pH, TA_norm)  %>%
+  group_by(site, pool_number, substrate) %>%  # Group by metadata
+  arrange(time_point, .by_group = TRUE) %>%  # Ensure correct order
+  reframe(
+    delta_pH = case_when(
+      site == "Diamond Head" ~ pH[time_point = 1] - pH[time_point = 3],  # Diamond Head (Time 1 - Time 3)
+      site == "Sandy Beach" ~ pH[time_point = 1] - pH[time_point = 2]   # Sandy Beach (Time 1 - Time 2)
+    ),
+    delta_TA = case_when(
+      site == "Diamond Head" ~ TA_norm[time_point = 1] - TA_norm[time_point = 3],  # Diamond Head (Time 1 - Time 3)
+      site == "Sandy Beach" ~ TA_norm[time_point = 1] - TA_norm[time_point = 2]   # Sandy Beach (Time 1 - Time 2)
+    ), 
+    delta_time = case_when(
+      site == "Diamond Head" ~ as.numeric(difftime(sample_time[time_point = 3], sample_time[time_point = 1], units = "mins")),  # Time 3 - Time 1 for Diamond Head
+      site == "Sandy Beach" ~ as.numeric(difftime(sample_time[time_point = 2], sample_time[time_point = 1], units = "mins"))   # Time 2 - Time 1 for Sandy Beach
+    )
+  ) %>% 
+    distinct(site, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+```
+
+Doing it for just two timepoints for now (T1-T2)
+
+``` r
+delta_calc2 <- data %>% 
+  select(site, pool_number, substrate, time_point, sample_time, pH, TA_norm)  %>%
+  group_by(site, pool_number, substrate) %>%  # Group by metadata
+  arrange(time_point, .by_group = TRUE) %>%  # Ensure correct order
+  reframe(
+    delta_pH = case_when(
+      site == "Diamond Head" ~ pH[time_point = 1] - pH[time_point = 2],  # Diamond Head (Time 1 - Time 3)
+      site == "Sandy Beach" ~ pH[time_point = 1] - pH[time_point = 2]   # Sandy Beach (Time 1 - Time 2)
+    ),
+    delta_TA = case_when(
+      site == "Diamond Head" ~ TA_norm[time_point = 1] - TA_norm[time_point = 2],  # Diamond Head (Time 1 - Time 3)
+      site == "Sandy Beach" ~ TA_norm[time_point = 1] - TA_norm[time_point = 2]   # Sandy Beach (Time 1 - Time 2)
+    ), 
+    delta_time = case_when(
+      site == "Diamond Head" ~ as.numeric(difftime(sample_time[time_point = 2], sample_time[time_point = 1], units = "mins")),  # Time 3 - Time 1 for Diamond Head
+      site == "Sandy Beach" ~ as.numeric(difftime(sample_time[time_point = 2], sample_time[time_point = 1], units = "mins"))   # Time 2 - Time 1 for Sandy Beach
+    )
+  ) %>% 
+    distinct(site, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+```
+
+Now T2-T3
+
+``` r
+delta_calc3 <- data %>% 
+  select(site, pool_number, substrate, time_point, sample_time, pH, TA_norm)  %>%
+  group_by(site, pool_number, substrate) %>%  # Group by metadata
+  arrange(time_point, .by_group = TRUE) %>%  # Ensure correct order
+  reframe(
+    delta_pH = case_when(
+      site == "Diamond Head" ~ pH[time_point = 2] - pH[time_point = 3],  # Diamond Head (Time 1 - Time 3)
+      site == "Sandy Beach" ~ pH[time_point = 1] - pH[time_point = 2]   # Sandy Beach (Time 1 - Time 2)
+    ),
+    delta_TA = case_when(
+      site == "Diamond Head" ~ TA_norm[time_point = 2] - TA_norm[time_point = 3],  # Diamond Head (Time 1 - Time 3)
+      site == "Sandy Beach" ~ TA_norm[time_point = 1] - TA_norm[time_point = 2]   # Sandy Beach (Time 1 - Time 2)
+    ), 
+    delta_time = case_when(
+      site == "Diamond Head" ~ as.numeric(difftime(sample_time[time_point = 3], sample_time[time_point = 2], units = "mins")),  # Time 3 - Time 1 for Diamond Head
+      site == "Sandy Beach" ~ as.numeric(difftime(sample_time[time_point = 2], sample_time[time_point = 1], units = "mins"))   # Time 2 - Time 1 for Sandy Beach
+    )
+  ) %>% 
+    distinct(site, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+```
+
 Separating Sandy Beach and Diamond Head
 
 ``` r
@@ -104,104 +192,160 @@ dh_data <- data %>% filter(site %in% "Diamond Head")
 
 ## Data Viz!
 
-### Combined
-
 ``` r
-data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) +  geom_point() + theme_minimal() + labs(title = "Temperature")
-```
-
-![](first_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
-
-``` r
-data %>% ggplot(aes(x = sample_time, y = temp_pool, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "temperature")
-```
-
-![](first_analysis_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
-
-``` r
-data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH")
-```
-
-![](first_analysis_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
-
-``` r
-data %>% ggplot(aes(x = sample_time, y = pH, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH")
-```
-
-![](first_analysis_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
-
-``` r
-data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA")
-```
-
-![](first_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
-
-``` r
-data %>% ggplot(aes(x = sample_time, y = alkalinity, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Alkalinity")
+data %>% ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +
+  facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Temperature") + theme(axis.text.x = element_text(angle = 30))
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
-data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity")
+data %>% ggplot(aes(x = sample_time, y = pH, color = pool_number)) +
+    facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = Salinity_lab, color = pool_number, shape = site)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity")
+data %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
-### Sandy Beach
-
 ``` r
-sandy_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Temperature - Sandy Beach")
+data %>% ggplot(aes(x = sample_time, y = Salinity_lab, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
+------------------------------------------------------------------------
+
+TA
+
 ``` r
-sandy_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH - Sandy Beach")
+delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + 
+  facet_wrap(~site, scales = "free_x") +
+  geom_boxplot(alpha = 0.7) + 
+  geom_point() + 
+  theme_bw() + 
+  scale_color_manual(values = c("gray20", "sienna2", "palegreen3", "dodgerblue3")) +
+  guides(color = "none") +
+  labs(x = "Substrate", y = "Delta TA", title = "DH T1-T3") + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
-sandy_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA - Sandy Beach")
+delta_calc2 %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + 
+  facet_wrap(~site, scales = "free_x") +
+  geom_boxplot(alpha = 0.7) + 
+  geom_point() + 
+  theme_bw() + 
+  scale_color_manual(values = c("gray20", "sienna2", "palegreen3", "dodgerblue3")) +
+  guides(color = "none") +
+  labs(x = "Substrate", y = "Delta TA", title = "DH T1-T2") + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
-sandy_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity - Sandy Beach")
+delta_calc3 %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + 
+  facet_wrap(~site, scales = "free_x") +
+  geom_boxplot(alpha = 0.7) + 
+  geom_point() + 
+  theme_bw() + 
+  scale_color_manual(values = c("gray20", "sienna2", "palegreen3", "dodgerblue3")) +
+  guides(color = "none") +
+  labs(x = "Substrate", y = "Delta TA", title = "DH T2-T3") + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
-### Diamond Head
+pH
 
 ``` r
-dh_data %>% ggplot(aes(x = time_point, y = temp_pool, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Temperature - Diamond Head")
+delta_calc %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + 
+  facet_wrap(~site, scales = "free_x") +
+  geom_boxplot(alpha = 0.7) + 
+  geom_point() + 
+  theme_bw() + 
+  scale_color_manual(values = c("gray20", "sienna2", "palegreen3", "dodgerblue3")) +
+  guides(color = "none") +
+  labs(x = "Substrate", y = "Delta pH", title = "DH T1-T3") + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ``` r
-dh_data %>% ggplot(aes(x = time_point, y = pH, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH - Diamond Head")
+delta_calc2 %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + 
+  facet_wrap(~site, scales = "free_x") +
+  geom_boxplot(alpha = 0.7) + 
+  geom_point() + 
+  theme_bw() + 
+  scale_color_manual(values = c("gray20", "sienna2", "palegreen3", "dodgerblue3")) +
+  guides(color = "none") +
+  labs(x = "Substrate", y = "Delta pH", title = "DH T1-T2") + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ``` r
-dh_data %>% ggplot(aes(x = time_point, y = alkalinity, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA - Diamond Head")
+delta_calc3 %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + 
+  facet_wrap(~site, scales = "free_x") +
+  geom_boxplot(alpha = 0.7) + 
+  geom_point() + 
+  theme_bw() + 
+  scale_color_manual(values = c("gray20", "sienna2", "palegreen3", "dodgerblue3")) +
+  guides(color = "none") +
+  labs(x = "Substrate", y = "Delta pH", title = "DH T2-T3") + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
-dh_data %>% ggplot(aes(x = time_point, y = Salinity_lab, color = pool_number)) + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity - Diamond Head")
+delta_calc %>% 
+  filter(substrate == "limestone" | substrate == "basalt") %>%
+  ggplot(aes(x = delta_pH, y = delta_TA, color = substrate)) + 
+  facet_wrap(~site, scales = "free_x") +
+  geom_point() + 
+  theme_bw() + 
+  scale_color_manual(values = c("gray20", "sienna2")) +
+  guides(color = "none") +
+  labs(x = "Delta pH", y = "Delta TA", title = "DH T1-T3") 
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+
+``` r
+delta_calc2 %>% 
+  filter(substrate == "limestone" | substrate == "basalt") %>%
+  ggplot(aes(x = delta_pH, y = delta_TA, color = substrate)) + 
+  facet_wrap(~site, scales = "free_x") +
+  geom_point() + 
+  theme_bw() + 
+  scale_color_manual(values = c("gray20", "sienna2")) +
+  guides(color = "none") +
+  labs(x = "Delta pH", y = "Delta TA", title = "DH T1-T2") 
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+
+``` r
+delta_calc3 %>% 
+  filter(substrate == "limestone" | substrate == "basalt") %>%
+  ggplot(aes(x = delta_pH, y = delta_TA, color = substrate)) + 
+  facet_wrap(~site, scales = "free_x") +
+  geom_point() + 
+  theme_bw() + 
+  scale_color_manual(values = c("gray20", "sienna2")) +
+  guides(color = "none") +
+  labs(x = "Delta pH", y = "Delta TA", title = "DH T2-T3") 
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
