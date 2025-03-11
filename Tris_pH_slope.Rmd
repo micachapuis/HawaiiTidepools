@@ -38,16 +38,16 @@ pHSlope <- pHcalib %>%
   
             left_join(.,pHData) %>% # join with the pH sample data
   
-            mutate(mVTris = TempInSitu*TTris + `(Intercept)`) %>% # calculate the mV of the tris at temperature in which the pH of samples were measured
+            mutate(mVTris = temp_field*TTris + `(Intercept)`) %>% # calculate the mV of the tris at temperature in which the pH of samples were measured
   
            #drop_na() %>%       # Mica: commented out because I have a lot of NAs in data and this drops all no matter the column, will eventually use this again
   
-            mutate(pH = pH(Ex=mV,Etris=mVTris,S=Salinity_lab,T=TempInSitu)) %>% # calculate pH of the samples using the pH seacarb function
+            mutate(pH = pH(Ex=mV,Etris=mVTris,S=salinity_lab,T=temp_field)) %>% # calculate pH of the samples using the pH seacarb function
   
   #mutate(pH_insitu = pHinsi(pH = pH, ALK = TA_Raw, Tinsi = TempInSitu, Tlab = Temp, S = Salinity_lab_Silbiger)) %>%
   # Mica: this was already commented out 
   
-            select(date, SampleID,pH) # selects just these columns 
+            select(date, sample_ID,pH) # selects just these columns 
                 # Mica: this used to also select Salinity_lab and TempInSitu but I chose to delete it because I will join back with the other data anyways
 
 ```
