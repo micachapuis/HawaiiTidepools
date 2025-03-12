@@ -243,6 +243,12 @@ data %>% filter(site == "Diamond Head") %>%
 data %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
+    ## Warning: Removed 18 rows containing missing values or values outside the scale range
+    ## (`geom_line()`).
+
+    ## Warning: Removed 18 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
 ![](first_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
@@ -284,6 +290,12 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
+    ## Warning: Removed 6 rows containing non-finite outside the scale range
+    ## (`stat_boxplot()`).
+
+    ## Warning: Removed 6 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
 ![](first_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ``` r
@@ -299,6 +311,12 @@ delta_calc2 %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #,
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
+    ## Warning: Removed 6 rows containing non-finite outside the scale range
+    ## (`stat_boxplot()`).
+
+    ## Warning: Removed 6 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
 ![](first_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ``` r
@@ -313,6 +331,12 @@ delta_calc3 %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #,
   labs(x = "Substrate", y = "Delta TA", title = "DH T3-T2") + 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
+
+    ## Warning: Removed 6 rows containing non-finite outside the scale range
+    ## (`stat_boxplot()`).
+
+    ## Warning: Removed 6 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
@@ -375,6 +399,9 @@ delta_calc %>%
   labs(x = "Delta pH", y = "Delta TA", title = "DH T3-T1") 
 ```
 
+    ## Warning: Removed 5 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
 ![](first_analysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ``` r
@@ -389,6 +416,9 @@ delta_calc2 %>%
   labs(x = "Delta pH", y = "Delta TA", title = "DH T2-T1") 
 ```
 
+    ## Warning: Removed 5 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
 ![](first_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 ``` r
@@ -402,6 +432,9 @@ delta_calc3 %>%
   guides(color = "none") +
   labs(x = "Delta pH", y = "Delta TA", title = "DH T3-T2") 
 ```
+
+    ## Warning: Removed 5 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
@@ -436,22 +469,22 @@ summary(model1)
     ##     data = data)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -0.29139 -0.12504 -0.02194  0.06914  0.54278 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.3354 -0.1593 -0.0491  0.1188  0.5532 
     ## 
     ## Coefficients:
     ##                   Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)      6.892e+00  2.588e-01  26.636  < 2e-16 ***
-    ## sample_time      3.952e-05  6.369e-06   6.205 5.28e-07 ***
-    ## perimeter_m     -4.310e-02  1.977e-02  -2.180   0.0365 *  
-    ## surface_area_m2  5.123e-02  3.617e-02   1.416   0.1661    
+    ## (Intercept)      8.004e+00  1.204e-01  66.506  < 2e-16 ***
+    ## sample_time      1.053e-05  2.580e-06   4.082 0.000181 ***
+    ## perimeter_m     -1.713e-02  1.685e-02  -1.016 0.314862    
+    ## surface_area_m2 -7.581e-03  2.876e-02  -0.264 0.793314    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.1924 on 33 degrees of freedom
-    ##   (11 observations deleted due to missingness)
-    ## Multiple R-squared:  0.5557, Adjusted R-squared:  0.5153 
-    ## F-statistic: 13.76 on 3 and 33 DF,  p-value: 5.485e-06
+    ## Residual standard error: 0.2332 on 45 degrees of freedom
+    ##   (17 observations deleted due to missingness)
+    ## Multiple R-squared:  0.2763, Adjusted R-squared:  0.228 
+    ## F-statistic: 5.727 on 3 and 45 DF,  p-value: 0.002084
 
 ``` r
 Anova(model1)
@@ -461,10 +494,10 @@ Anova(model1)
     ## 
     ## Response: pH
     ##                  Sum Sq Df F value    Pr(>F)    
-    ## sample_time     1.42493  1 38.5072 5.277e-07 ***
-    ## perimeter_m     0.17590  1  4.7534   0.03648 *  
-    ## surface_area_m2 0.07421  1  2.0055   0.16610    
-    ## Residuals       1.22114 33                      
+    ## sample_time     0.90606  1 16.6627 0.0001806 ***
+    ## perimeter_m     0.05618  1  1.0331 0.3148620    
+    ## surface_area_m2 0.00378  1  0.0695 0.7933137    
+    ## Residuals       2.44693 45                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -494,7 +527,7 @@ summary(model2)
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 105.2 on 33 degrees of freedom
-    ##   (11 observations deleted due to missingness)
+    ##   (29 observations deleted due to missingness)
     ## Multiple R-squared:  0.5335, Adjusted R-squared:  0.4911 
     ## F-statistic: 12.58 on 3 and 33 DF,  p-value: 1.206e-05
 
@@ -526,18 +559,19 @@ summary(model3)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.29076 -0.08690 -0.00893  0.06289  0.33271 
+    ## -0.29076 -0.08695 -0.00893  0.06294  0.33282 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 11.7257184  0.3200603   36.64  < 2e-16 ***
-    ## TA          -0.0015891  0.0001477  -10.76 3.82e-14 ***
+    ## (Intercept) 11.7248703  0.3200616   36.63  < 2e-16 ***
+    ## TA          -0.0015887  0.0001477  -10.75 3.85e-14 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 0.139 on 46 degrees of freedom
-    ## Multiple R-squared:  0.7155, Adjusted R-squared:  0.7093 
-    ## F-statistic: 115.7 on 1 and 46 DF,  p-value: 3.82e-14
+    ##   (18 observations deleted due to missingness)
+    ## Multiple R-squared:  0.7154, Adjusted R-squared:  0.7092 
+    ## F-statistic: 115.6 on 1 and 46 DF,  p-value: 3.852e-14
 
 ### pH vs substrate
 
@@ -552,20 +586,20 @@ summary(model4)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.42806 -0.15143 -0.00478  0.10050  0.67432 
+    ## -0.50447 -0.12449 -0.02583  0.09452  0.67426 
     ## 
     ## Coefficients:
     ##                             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)                  8.38051    0.05897 142.120   <2e-16 ***
-    ## substratelimestone          -0.05073    0.07827  -0.648   0.5203    
-    ## substratelimestone + basalt -0.39857    0.14840  -2.686   0.0102 *  
-    ## substrateocean              -0.25939    0.10214  -2.540   0.0147 *  
+    ## (Intercept)                  8.45701    0.04138 204.357  < 2e-16 ***
+    ## substratelimestone          -0.12721    0.06512  -1.953  0.05529 .  
+    ## substratelimestone + basalt -0.47498    0.13932  -3.409  0.00115 ** 
+    ## substrateocean              -0.36948    0.08086  -4.569 2.39e-05 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2359 on 44 degrees of freedom
-    ## Multiple R-squared:  0.2167, Adjusted R-squared:  0.1633 
-    ## F-statistic: 4.057 on 3 and 44 DF,  p-value: 0.01248
+    ## Residual standard error: 0.2304 on 62 degrees of freedom
+    ## Multiple R-squared:  0.3144, Adjusted R-squared:  0.2812 
+    ## F-statistic: 9.476 on 3 and 62 DF,  p-value: 3.054e-05
 
 ``` r
 Anova(model4)
@@ -578,9 +612,9 @@ Anova(model4)
     ## Anova Table (Type II tests)
     ## 
     ## Response: pH
-    ##            Sum Sq Df F value  Pr(>F)  
-    ## substrate 0.67718  3  4.0573 0.01248 *
-    ## Residuals 2.44794 44                  
+    ##           Sum Sq Df F value    Pr(>F)    
+    ## substrate 1.5093  3  9.4762 3.054e-05 ***
+    ## Residuals 3.2916 62                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -609,6 +643,7 @@ summary(model5)
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 120.1 on 44 degrees of freedom
+    ##   (18 observations deleted due to missingness)
     ## Multiple R-squared:  0.283,  Adjusted R-squared:  0.2341 
     ## F-statistic: 5.789 on 3 and 44 DF,  p-value: 0.001998
 
@@ -626,5 +661,50 @@ Anova(model5)
     ##           Sum Sq Df F value   Pr(>F)   
     ## substrate 250587  3  5.7888 0.001998 **
     ## Residuals 634889 44                    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### temp vs substrate
+
+``` r
+model6 <- lm(temp_pool ~ substrate, data)
+summary(model6)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = temp_pool ~ substrate, data = data)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.4389 -2.4389  0.0333  1.7083  8.4201 
+    ## 
+    ## Coefficients:
+    ##                             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)                  26.4389     0.5336  49.545   <2e-16 ***
+    ## substratelimestone            1.9278     0.8397   2.296   0.0251 *  
+    ## substratelimestone + basalt  -0.6389     1.7965  -0.356   0.7233    
+    ## substrateocean               -1.0231     1.0427  -0.981   0.3303    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 2.971 on 62 degrees of freedom
+    ## Multiple R-squared:  0.1268, Adjusted R-squared:  0.08455 
+    ## F-statistic: 3.001 on 3 and 62 DF,  p-value: 0.03717
+
+``` r
+Anova(model6)
+```
+
+    ## Warning in printHypothesis(L, rhs, names(b)): one or more coefficients in the hypothesis include
+    ##      arithmetic operators in their names;
+    ##   the printed representation of the hypothesis will be omitted
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: temp_pool
+    ##           Sum Sq Df F value  Pr(>F)  
+    ## substrate  79.48  3  3.0012 0.03717 *
+    ## Residuals 547.32 62                  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1

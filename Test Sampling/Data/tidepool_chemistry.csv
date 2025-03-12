@@ -47,3 +47,21 @@ date,site,pool_number,day_night,time_point,sample_time,tide_ft,temp_pool,sample_
 2025/03/02,Diamond Head,5,day,3,13:02,-0.1,31.300,20250302_dh_p5_t3,31.946,-85.6,8.51,35.56,37.46,"Mica, Haley",
 2025/03/02,Diamond Head,6,day,3,13:16,0,31.100,20250302_dh_p6_t3,32.668,-86.9,8.55,36.81,38.52,"Mica, Haley",
 2025/03/02,Diamond Head,ocean,day,3,13:05,-0.1,26.900,20250302_dh_ocn_t3,29.456,-74.3,8.34,35.02,36.88,"Mica, Haley",
+2025/03/11,Sandy Beach,1,night,1,19:20,-0.1,24.800,20250311_sb_p1_t1,23.719,-91.4,8.68,36.35,36.35,"Mica, Haley",large crab
+2025/03/11,Sandy Beach,3,night,1,19:16,-0.1,24.500,20250311_sb_p3_t1,23.855,-84.6,8.56,36.90,36.90,"Mica, Haley",
+2025/03/11,Sandy Beach,4,night,1,19:10,-0.1,23.300,20250311_sb_p4_t1,23.556,-80.1,8.48,35.35,35.35,"Mica, Haley",
+2025/03/11,Sandy Beach,5,night,1,19:13,-0.1,23.900,20250311_sb_p5_t1,23.754,-105.7,8.93,37.79,37.79,"Mica, Haley",
+2025/03/11,Sandy Beach,6,night,1,19:26,-0.1,23.400,20250311_sb_p6_t1,23.351,-108.0,8.97,38.70,38.70,"Mica, Haley",
+2025/03/11,Sandy Beach,ocean,night,1,19:20,-0.1,24.100,20250311_sb_ocn_t1,23.688,-59.4,8.12,35.04,35.04,"Mica, Haley",
+2025/03/11,Sandy Beach,1,night,2,20:20,-0.1,24.000,20250311_sb_p1_t2,23.524,-89.0,8.64,36.19,36.19,"Mica, Haley",
+2025/03/11,Sandy Beach,3,night,2,20:15,-0.1,23.600,20250311_sb_p3_t2,23.349,-82.9,8.53,37.42,37.42,"Mica, Haley","lots of wind, 3 sea slugs!"
+2025/03/11,Sandy Beach,4,night,2,20:08,-0.1,22.500,20250311_sb_p4_t2,22.832,-73.9,8.38,35.44,35.44,"Mica, Haley",
+2025/03/11,Sandy Beach,5,night,2,20:11,-0.1,22.800,20250311_sb_p5_t2,22.799,-102.5,8.87,37.96,37.96,"Mica, Haley",
+2025/03/11,Sandy Beach,6,night,2,20:26,-0.1,22.400,20250311_sb_p6_t2,22.837,-102.9,8.88,39.17,39.17,"Mica, Haley",
+2025/03/11,Sandy Beach,ocean,night,2,20:23,-0.1,23.900,20250311_sb_ocn_t2,23.376,-58.6,8.11,35.24,35.24,"Mica, Haley",
+2025/03/11,Sandy Beach,1,night,3,21:18,0,23.500,20250311_sb_p1_t3,22.957,-86.4,8.59,36.27,36.27,"Mica, Haley",
+2025/03/11,Sandy Beach,3,night,3,21:12,0,22.900,20250311_sb_p3_t3,23.000,-80.4,8.49,37.31,37.31,"Mica, Haley",
+2025/03/11,Sandy Beach,4,night,3,21:04,0,22.000,20250311_sb_p4_t3,22.617,-67.5,8.26,35.51,35.51,"Mica, Haley",
+2025/03/11,Sandy Beach,5,night,3,21:09,0,22.300,20250311_sb_p5_t3,22.665,-98.7,8.81,38.13,38.13,"Mica, Haley",
+2025/03/11,Sandy Beach,6,night,3,21:27,0,22.000,20250311_sb_p6_t3,22.304,-98.1,8.80,39.10,39.10,"Mica, Haley","lost some water, noticeably lower"
+2025/03/11,Sandy Beach,ocean,night,3,21:21,0,23.800,20250311_sb_ocn_t3,23.009,-58.1,8.10,35.18,35.18,"Mica, Haley",not *fully* filtered. one half syringe w/o filter
