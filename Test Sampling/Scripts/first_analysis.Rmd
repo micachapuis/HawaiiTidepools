@@ -156,7 +156,7 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +
   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature") + theme(axis.text.x = element_text(angle = 30))
 ```
 ```{r}
-data %>% filter(site == "Diamond Head") %>%
+data %>% filter(site == "Sandy Beach") %>%
   ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
@@ -172,7 +172,7 @@ data %>% ggplot(aes(x = sample_time, y = pH_probe, color = pool_number)) +
 ```
 
 ```{r}
-data %>% filter(site == "Diamond Head") %>%
+data %>% filter(site == "Sandy Beach") %>%
   ggplot(aes(x = sample_time, y = pH, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
@@ -183,7 +183,7 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   face
 ```
 
 ```{r}
-data %>% filter(site == "Diamond Head") %>%
+data %>% filter(site == "Sandy Beach") %>%
   ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
@@ -193,7 +193,7 @@ data %>% filter(site == "Diamond Head") %>%
 data %>% ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 ```{r}
-data %>% filter(site == "Diamond Head") %>%
+data %>% filter(site == "Sandy Beach") %>%
   ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
@@ -369,4 +369,5 @@ model6 <- lm(temp_pool ~ substrate, data)
 summary(model6)
 Anova(model6)
 ```
+
 
