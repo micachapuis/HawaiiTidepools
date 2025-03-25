@@ -1,0 +1,6 @@
+date,site,pool_number,pool_ID,sea_hare,hermit_crab,snail,limpet,fish,shore_crab,anemone,oyster,barnacle,total_consumers,surface_area_m2,consumer_density,notes
+2025/03/17,Diamond Head,2,dh_p2,9,31,60,0,4,0,0,0,0,104,0.40257984,258.33385,"snails, crabs, fish range in sizes"
+2025/03/17,Diamond Head,3,dh_p3,0,6,387,11,2,2,0,0,4,412,0.62967616,654.3045873,"snails, crabs, fish range in sizes"
+2025/03/17,Diamond Head,4,dh_p4,0,16,5,0,7,1,1,1,0,31,2.29160832,13.52761715,"snails, crabs, fish range in sizes"
+2025/03/17,Diamond Head,5,dh_p5,42,2,42,25,13,3,2,0,0,129,2.61160768,49.39486164,"snails, crabs, fish range in sizes"
+2025/03/17,Diamond Head,6,dh_p6,0,12,2,2,4,1,0,0,0,21,2.12644736,9.875626547,"snails, crabs, fish range in sizes"

@@ -54,6 +54,11 @@ Selecting columns
 data <- data %>% select(-observers, -notes, Sample.Index)
 ```
 
+Removing DH Pool 1 (limestone + basalt)
+```{r}
+data <- data %>% filter(!pool_ID == "dh_p1")
+```
+
 Adding in "ocean" as substrate
 ```{r}
 data <- data %>% mutate(substrate = replace_na(substrate, "ocean"))
