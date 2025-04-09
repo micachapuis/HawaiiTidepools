@@ -443,21 +443,21 @@ summary(model1)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.47062 -0.13969 -0.02427  0.11123  0.53965 
+    ## -0.39231 -0.16648 -0.03069  0.13584  0.62370 
     ## 
     ## Coefficients:
     ##                   Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)      8.082e+00  1.002e-01  80.687  < 2e-16 ***
-    ## sample_time      9.526e-06  1.912e-06   4.982 5.66e-06 ***
-    ## perimeter_m     -3.047e-02  1.258e-02  -2.423   0.0184 *  
-    ## surface_area_m2  3.135e-02  2.107e-02   1.488   0.1421    
+    ## (Intercept)      8.207e+00  1.022e-01  80.328   <2e-16 ***
+    ## sample_time      4.266e-06  1.641e-06   2.600   0.0113 *  
+    ## perimeter_m     -1.464e-02  1.287e-02  -1.138   0.2589    
+    ## surface_area_m2  1.857e-02  2.227e-02   0.834   0.4071    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2124 on 60 degrees of freedom
-    ##   (17 observations deleted due to missingness)
-    ## Multiple R-squared:  0.3168, Adjusted R-squared:  0.2826 
-    ## F-statistic: 9.274 on 3 and 60 DF,  p-value: 3.959e-05
+    ## Residual standard error: 0.2274 on 72 degrees of freedom
+    ##   (23 observations deleted due to missingness)
+    ## Multiple R-squared:  0.09974,    Adjusted R-squared:  0.06223 
+    ## F-statistic: 2.659 on 3 and 72 DF,  p-value: 0.05463
 
 ``` r
 Anova(model1)
@@ -466,11 +466,11 @@ Anova(model1)
     ## Anova Table (Type II tests)
     ## 
     ## Response: pH
-    ##                  Sum Sq Df F value    Pr(>F)    
-    ## sample_time     1.11921  1 24.8164 5.656e-06 ***
-    ## perimeter_m     0.26469  1  5.8690   0.01845 *  
-    ## surface_area_m2 0.09980  1  2.2128   0.14211    
-    ## Residuals       2.70599 60                      
+    ##                 Sum Sq Df F value  Pr(>F)  
+    ## sample_time     0.3493  1  6.7579 0.01132 *
+    ## perimeter_m     0.0669  1  1.2949 0.25892  
+    ## surface_area_m2 0.0359  1  0.6952 0.40715  
+    ## Residuals       3.7220 72                  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -487,22 +487,22 @@ summary(model2)
     ##     data = data)
     ## 
     ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -298.77 -121.07   35.52  110.29  273.11 
+    ##    Min     1Q Median     3Q    Max 
+    ## -343.8 -116.3   53.0  102.1  268.0 
     ## 
     ## Coefficients:
     ##                   Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)      2.223e+03  6.599e+01  33.691   <2e-16 ***
-    ## sample_time     -2.244e-03  1.260e-03  -1.782   0.0799 .  
-    ## perimeter_m      3.268e+00  8.286e+00   0.394   0.6947    
-    ## surface_area_m2  2.272e+00  1.388e+01   0.164   0.8705    
+    ## (Intercept)      2.150e+03  6.453e+01  33.312   <2e-16 ***
+    ## sample_time      6.757e-04  1.036e-03   0.652    0.516    
+    ## perimeter_m     -4.322e+00  8.126e+00  -0.532    0.596    
+    ## surface_area_m2  7.501e+00  1.407e+01   0.533    0.596    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 139.9 on 60 degrees of freedom
-    ##   (17 observations deleted due to missingness)
-    ## Multiple R-squared:  0.06073,    Adjusted R-squared:  0.01376 
-    ## F-statistic: 1.293 on 3 and 60 DF,  p-value: 0.2851
+    ## Residual standard error: 143.6 on 72 degrees of freedom
+    ##   (23 observations deleted due to missingness)
+    ## Multiple R-squared:  0.009717,   Adjusted R-squared:  -0.03154 
+    ## F-statistic: 0.2355 on 3 and 72 DF,  p-value: 0.8713
 
 ``` r
 Anova(model2)
@@ -511,13 +511,11 @@ Anova(model2)
     ## Anova Table (Type II tests)
     ## 
     ## Response: TA
-    ##                  Sum Sq Df F value  Pr(>F)  
-    ## sample_time       62136  1  3.1746 0.07985 .
-    ## perimeter_m        3044  1  0.1555 0.69471  
-    ## surface_area_m2     524  1  0.0268 0.87055  
-    ## Residuals       1174366 60                  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ##                  Sum Sq Df F value Pr(>F)
+    ## sample_time        8767  1  0.4251 0.5165
+    ## perimeter_m        5834  1  0.2829 0.5964
+    ## surface_area_m2    5863  1  0.2843 0.5955
+    ## Residuals       1484760 72
 
 ### ph vs TA
 
@@ -532,18 +530,18 @@ summary(model3)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.36069 -0.12624 -0.03507  0.14580  0.31458 
+    ## -0.35725 -0.11379 -0.02799  0.14542  0.32309 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 11.4159410  0.2940305   38.83   <2e-16 ***
-    ## TA          -0.0014249  0.0001355  -10.52   <2e-16 ***
+    ## (Intercept) 11.2415088  0.2699797   41.64   <2e-16 ***
+    ## TA          -0.0013415  0.0001231  -10.89   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.1634 on 79 degrees of freedom
-    ## Multiple R-squared:  0.5832, Adjusted R-squared:  0.578 
-    ## F-statistic: 110.6 on 1 and 79 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 0.1611 on 97 degrees of freedom
+    ## Multiple R-squared:  0.5503, Adjusted R-squared:  0.5456 
+    ## F-statistic: 118.7 on 1 and 97 DF,  p-value: < 2.2e-16
 
 ### pH vs substrate
 
@@ -558,19 +556,19 @@ summary(model4)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.45208 -0.14581 -0.02756  0.12046  0.67187 
+    ## -0.44380 -0.12558 -0.01916  0.09495  0.70993 
     ## 
     ## Coefficients:
     ##                    Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)         8.40372    0.03353 250.659  < 2e-16 ***
-    ## substratelimestone -0.07736    0.05988  -1.292      0.2    
-    ## substrateocean     -0.30907    0.06941  -4.453 2.79e-05 ***
+    ## (Intercept)         8.39534    0.03035 276.649  < 2e-16 ***
+    ## substratelimestone -0.10721    0.04784  -2.241   0.0273 *  
+    ## substrateocean     -0.31442    0.05979  -5.258 8.79e-07 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2274 on 78 degrees of freedom
-    ## Multiple R-squared:  0.2028, Adjusted R-squared:  0.1823 
-    ## F-statistic: 9.919 on 2 and 78 DF,  p-value: 0.0001452
+    ## Residual standard error: 0.2124 on 96 degrees of freedom
+    ## Multiple R-squared:  0.2257, Adjusted R-squared:  0.2096 
+    ## F-statistic: 13.99 on 2 and 96 DF,  p-value: 4.646e-06
 
 ``` r
 Anova(model4)
@@ -580,8 +578,8 @@ Anova(model4)
     ## 
     ## Response: pH
     ##           Sum Sq Df F value    Pr(>F)    
-    ## substrate 1.0257  2  9.9191 0.0001452 ***
-    ## Residuals 4.0330 78                      
+    ## substrate 1.2629  2  13.993 4.646e-06 ***
+    ## Residuals 4.3320 96                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -598,19 +596,19 @@ summary(model5)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -341.43  -82.72   14.08   96.80  294.01 
+    ## -391.11  -74.53   25.46   88.56  286.38 
     ## 
     ## Coefficients:
     ##                    Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)         2133.68      18.81 113.418  < 2e-16 ***
-    ## substratelimestone    36.14      33.60   1.075  0.28547    
-    ## substrateocean       130.55      38.95   3.352  0.00124 ** 
+    ## (Intercept)         2141.32      17.69 121.028  < 2e-16 ***
+    ## substratelimestone    78.19      27.89   2.804 0.006114 ** 
+    ## substrateocean       122.84      34.86   3.524 0.000654 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 127.6 on 78 degrees of freedom
-    ## Multiple R-squared:  0.1262, Adjusted R-squared:  0.1038 
-    ## F-statistic: 5.633 on 2 and 78 DF,  p-value: 0.005186
+    ## Residual standard error: 123.8 on 96 degrees of freedom
+    ## Multiple R-squared:  0.1392, Adjusted R-squared:  0.1213 
+    ## F-statistic: 7.763 on 2 and 96 DF,  p-value: 0.0007501
 
 ``` r
 Anova(model5)
@@ -619,9 +617,9 @@ Anova(model5)
     ## Anova Table (Type II tests)
     ## 
     ## Response: TA
-    ##            Sum Sq Df F value   Pr(>F)   
-    ## substrate  183421  2  5.6333 0.005186 **
-    ## Residuals 1269839 78                    
+    ##            Sum Sq Df F value    Pr(>F)    
+    ## substrate  238134  2  7.7625 0.0007501 ***
+    ## Residuals 1472514 96                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -638,19 +636,19 @@ summary(model6)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -4.8305 -1.8667  0.0333  1.6695  8.0285 
+    ## -4.7083 -2.2163 -0.2102  1.5837  8.1507 
     ## 
     ## Coefficients:
     ##                    Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)         26.8305     0.4091  65.584   <2e-16 ***
-    ## substratelimestone   1.5361     0.7307   2.102   0.0388 *  
-    ## substrateocean      -1.4539     0.8469  -1.717   0.0900 .  
+    ## (Intercept)         26.7083     0.3933  67.915   <2e-16 ***
+    ## substratelimestone   0.3160     0.6199   0.510    0.611    
+    ## substrateocean      -1.1981     0.7749  -1.546    0.125    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 2.775 on 78 degrees of freedom
-    ## Multiple R-squared:  0.1142, Adjusted R-squared:  0.09146 
-    ## F-statistic: 5.027 on 2 and 78 DF,  p-value: 0.008843
+    ## Residual standard error: 2.753 on 96 degrees of freedom
+    ## Multiple R-squared:  0.0354, Adjusted R-squared:  0.0153 
+    ## F-statistic: 1.762 on 2 and 96 DF,  p-value: 0.1773
 
 ``` r
 Anova(model6)
@@ -659,8 +657,6 @@ Anova(model6)
     ## Anova Table (Type II tests)
     ## 
     ## Response: temp_pool
-    ##           Sum Sq Df F value   Pr(>F)   
-    ## substrate   77.4  2  5.0266 0.008843 **
-    ## Residuals  600.5 78                    
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ##           Sum Sq Df F value Pr(>F)
+    ## substrate   26.7  2  1.7616 0.1773
+    ## Residuals  727.5 96
