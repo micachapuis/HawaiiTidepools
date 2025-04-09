@@ -166,10 +166,10 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
 ![](second_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
-data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = pH, y = TA_norm)) + geom_point() + geom_smooth() + facet_wrap(~substrate)
+data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = pH, y = TA_norm)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~substrate)
 ```
 
-    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+    ## `geom_smooth()` using formula = 'y ~ x'
 
 ![](second_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
@@ -179,13 +179,13 @@ delta_calc %>%
   ggplot(aes(x = delta_pH, y = delta_TA)) + 
   facet_wrap(~substrate) +
   geom_point() + 
-  geom_smooth() + 
+  geom_smooth(method = "lm") + 
   theme_bw() + 
   scale_color_manual(values = c("gray20", "sienna2")) +
   guides(color = "none") +
   labs(x = "Delta pH", y = "Delta TA") 
 ```
 
-    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+    ## `geom_smooth()` using formula = 'y ~ x'
 
 ![](second_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->

@@ -133,7 +133,7 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
 
 
 ```{r}
-data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = pH, y = TA_norm)) + geom_point() + geom_smooth() + facet_wrap(~substrate)
+data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = pH, y = TA_norm)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~substrate)
 ```
 
 ```{r}
@@ -142,7 +142,7 @@ delta_calc %>%
   ggplot(aes(x = delta_pH, y = delta_TA)) + 
   facet_wrap(~substrate) +
   geom_point() + 
-  geom_smooth() + 
+  geom_smooth(method = "lm") + 
   theme_bw() + 
   scale_color_manual(values = c("gray20", "sienna2")) +
   guides(color = "none") +
