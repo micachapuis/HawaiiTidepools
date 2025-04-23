@@ -11,6 +11,8 @@ library(here)
 library(seacarb)
 library(lubridate)
 library(car)
+library(lubridateExtras)
+library(lme4)
 ```
 
 ## Load in Data
@@ -80,12 +82,19 @@ Salinity Normalize TA
 data <- data %>% mutate(TA_norm = TA*salinity_lab/35)
 ```
 
+Rounding sample time
+
+``` r
+data <- data %>% mutate(round_time = round_hms(sample_time, "hour"),
+                        rounded_time = hour(round_time))
+```
+
 Calculate delta pH and delta TA
 
 ``` r
 delta_calc <- data %>% 
-  select(date, site, pool_number, substrate, day_night, time_point, temp_pool, sample_time, pH, TA_norm)  %>%
-  group_by(date, site, pool_number, substrate, day_night) %>%  # group by metadata
+  select(date, site, pool_number, pool_ID, substrate, day_night, time_point, temp_pool, sample_time, pH, TA_norm)  %>%
+  group_by(date, site, pool_number, pool_ID, substrate, day_night) %>%  # group by metadata
   arrange(time_point, .by_group = TRUE) %>%  # ensure correct order
   reframe(
     delta_pH = if_else((date == "2025-02-16"), 
@@ -114,38 +123,78 @@ delta_calc <- data %>%
 plot(data$salinity_field, data$salinity_lab)
 ```
 
-![](second_analysis_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
-
-``` r
-data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = pH)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
-```
-
 ![](second_analysis_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ``` r
-data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = TA_norm)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
+data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = pH)) + geom_boxplot() + geom_point() + facet_wrap(~rounded_time)
 ```
 
 ![](second_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ``` r
-data %>% group_by(site, pool_number) %>% mutate(pH_mean = mean(pH)) %>%
-  filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = pH_mean)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
+data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = TA_norm)) + geom_boxplot() + geom_point() + facet_wrap(~rounded_time)
 ```
 
 ![](second_analysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
-delta_calc %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = delta_TA)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
+# mean pH for each tidepool
+data %>% group_by(site, pool_number) %>% mutate(pH_mean = mean(pH)) %>%
+  filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = pH_mean)) + geom_boxplot() + geom_point() + facet_wrap(~day_night)
 ```
 
 ![](second_analysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
-delta_calc %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = delta_pH)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
+# mean pH for each date
+data %>% group_by(date, site) %>% mutate(pH_mean = mean(pH)) %>%
+  filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = pH_mean)) + geom_boxplot() + geom_point() + facet_wrap(~day_night)
 ```
 
 ![](second_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+``` r
+# for night the basalt point at the same ph as limestone is DH basalt, for day DH basalt is higher point ~8.4 and ~8.2
+```
+
+``` r
+delta_calc %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = delta_TA)) + geom_boxplot() + geom_point() + facet_wrap(~day_night)
+```
+
+![](second_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+``` r
+delta_calc %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = delta_pH)) + geom_boxplot() + geom_point() + facet_wrap(~day_night)
+```
+
+![](second_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+``` r
+data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Pool Temp")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+![](second_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+``` r
+data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Field)")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+![](second_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+``` r
+data %>% ggplot(aes(x = sample_time, y = salinity_field, color= site)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Field)")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+![](second_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH)) +
@@ -154,7 +203,7 @@ data %>% ggplot(aes(x = sample_time, y = pH)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](second_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](second_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
@@ -163,7 +212,7 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](second_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](second_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
 data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = pH, y = TA_norm)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~substrate)
@@ -171,7 +220,7 @@ data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = pH, y = TA_norm)) + 
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](second_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](second_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 delta_calc %>% 
@@ -188,4 +237,49 @@ delta_calc %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](second_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](second_analysis_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+
+------------------------------------------------------------------------
+
+``` r
+producers <- read_csv(here("Test Sampling", "Data", "prodcover.csv"))
+data <- left_join(data, producers, by = "pool_ID")
+delta_calc <- left_join(delta_calc, producers, by = "pool_ID")
+```
+
+``` r
+mod1 <- lmer(delta_pH ~ prods_pcover + (1|pool_ID), data = delta_calc)
+```
+
+    ## boundary (singular) fit: see help('isSingular')
+
+``` r
+summary(mod1)
+```
+
+    ## Linear mixed model fit by REML ['lmerMod']
+    ## Formula: delta_pH ~ prods_pcover + (1 | pool_ID)
+    ##    Data: delta_calc
+    ## 
+    ## REML criterion at convergence: 7.5
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.46343 -0.87086  0.06126  0.56450  2.58601 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  pool_ID  (Intercept) 0.00000  0.000   
+    ##  Residual             0.04754  0.218   
+    ## Number of obs: 25, groups:  pool_ID, 8
+    ## 
+    ## Fixed effects:
+    ##              Estimate Std. Error t value
+    ## (Intercept)  0.112447   0.110718   1.016
+    ## prods_pcover 0.001761   0.002392   0.736
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## prods_pcovr -0.919
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')

@@ -13,7 +13,7 @@ library(tidyverse)
     ## ✔ dplyr     1.1.4     ✔ readr     2.1.5
     ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
     ## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-    ## ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+    ## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
     ## ✔ purrr     1.0.2     
     ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
@@ -51,7 +51,7 @@ library(car)
     ## 
     ##     some
 
-## Load in Data
+## Load in Data n
 
 ``` r
 chem <- read_csv(here("Test Sampling", "Data", "tidepool_chemistry.csv"))
@@ -214,11 +214,18 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +
 ![](first_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ``` r
-data %>% filter(site == "Sandy Beach") %>%
-  ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature")  + theme(axis.text.x = element_text(angle = 30))
+data %>% filter(site == "Diamond Head") %>%
+  ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature - DH")  + theme(axis.text.x = element_text(angle = 30)) 
 ```
 
 ![](first_analysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
+data %>% filter(site == "Sandy Beach") %>%
+  ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature - SB")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ### pH
 
@@ -227,21 +234,28 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH_probe, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (probe)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+``` r
+data %>% filter(site == "Diamond Head") %>%
+  ggplot(aes(x = sample_time, y = pH, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris) - DH")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
 data %>% filter(site == "Sandy Beach") %>%
-  ggplot(aes(x = sample_time, y = pH, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
+  ggplot(aes(x = sample_time, y = pH, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris) - SB")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ### TA
 
@@ -249,14 +263,21 @@ data %>% filter(site == "Sandy Beach") %>%
 data %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+``` r
+data %>% filter(site == "Diamond Head") %>%
+  ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized - DH")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ``` r
 data %>% filter(site == "Sandy Beach") %>%
-  ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
+  ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized - SB")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ### Salinity
 
@@ -264,14 +285,21 @@ data %>% filter(site == "Sandy Beach") %>%
 data %>% ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+
+``` r
+data %>% filter(site == "Diamond Head") %>%
+  ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field) - DH")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+![](first_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 data %>% filter(site == "Sandy Beach") %>%
-  ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field)")  + theme(axis.text.x = element_text(angle = 30))
+  ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field) - SB")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
 ### Deltas
 
@@ -290,7 +318,7 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 ``` r
 delta_calc2 %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, label = pool_number)) + 
@@ -305,7 +333,7 @@ delta_calc2 %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #,
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ``` r
 delta_calc3 %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, label = pool_number)) + 
@@ -320,7 +348,7 @@ delta_calc3 %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #,
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 #### Delta pH
 
@@ -337,7 +365,7 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + #, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 ``` r
 delta_calc2 %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + 
@@ -351,7 +379,7 @@ delta_calc2 %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 ``` r
 delta_calc3 %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + 
@@ -365,7 +393,7 @@ delta_calc3 %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 #### Delta TA vs Delta pH
 
@@ -381,7 +409,7 @@ delta_calc %>%
   labs(x = "Delta pH", y = "Delta TA", title = "DH T3-T1") 
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 ``` r
 delta_calc2 %>% 
@@ -395,7 +423,7 @@ delta_calc2 %>%
   labs(x = "Delta pH", y = "Delta TA", title = "DH T2-T1") 
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ``` r
 delta_calc3 %>% 
@@ -409,7 +437,7 @@ delta_calc3 %>%
   labs(x = "Delta pH", y = "Delta TA", title = "DH T3-T2") 
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 #### Delta Temp vs Delta pH
 
@@ -425,7 +453,7 @@ delta_calc %>%
   labs(x = "Delta Temperature", y = "Delta pH", title = "DH T3-T1") 
 ```
 
-![](first_analysis_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](first_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 ## Models
 
@@ -442,22 +470,22 @@ summary(model1)
     ##     data = data)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -0.39231 -0.16648 -0.03069  0.13584  0.62370 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.4119 -0.1717 -0.0183  0.1548  0.6892 
     ## 
     ## Coefficients:
     ##                   Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)      8.207e+00  1.022e-01  80.328   <2e-16 ***
-    ## sample_time      4.266e-06  1.641e-06   2.600   0.0113 *  
-    ## perimeter_m     -1.464e-02  1.287e-02  -1.138   0.2589    
-    ## surface_area_m2  1.857e-02  2.227e-02   0.834   0.4071    
+    ## (Intercept)      7.972e+00  8.800e-02  90.592  < 2e-16 ***
+    ## sample_time      7.501e-06  1.554e-06   4.826  5.9e-06 ***
+    ## perimeter_m     -1.006e-02  5.342e-03  -1.883    0.063 .  
+    ## surface_area_m2  2.257e-02  1.520e-02   1.485    0.141    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2274 on 72 degrees of freedom
-    ##   (23 observations deleted due to missingness)
-    ## Multiple R-squared:  0.09974,    Adjusted R-squared:  0.06223 
-    ## F-statistic: 2.659 on 3 and 72 DF,  p-value: 0.05463
+    ## Residual standard error: 0.2426 on 87 degrees of freedom
+    ##   (26 observations deleted due to missingness)
+    ## Multiple R-squared:  0.2396, Adjusted R-squared:  0.2134 
+    ## F-statistic: 9.139 on 3 and 87 DF,  p-value: 2.539e-05
 
 ``` r
 Anova(model1)
@@ -466,11 +494,11 @@ Anova(model1)
     ## Anova Table (Type II tests)
     ## 
     ## Response: pH
-    ##                 Sum Sq Df F value  Pr(>F)  
-    ## sample_time     0.3493  1  6.7579 0.01132 *
-    ## perimeter_m     0.0669  1  1.2949 0.25892  
-    ## surface_area_m2 0.0359  1  0.6952 0.40715  
-    ## Residuals       3.7220 72                  
+    ##                 Sum Sq Df F value    Pr(>F)    
+    ## sample_time     1.3702  1 23.2883 5.902e-06 ***
+    ## perimeter_m     0.2087  1  3.5473   0.06298 .  
+    ## surface_area_m2 0.1298  1  2.2060   0.14109    
+    ## Residuals       5.1188 87                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -487,22 +515,22 @@ summary(model2)
     ##     data = data)
     ## 
     ## Residuals:
-    ##    Min     1Q Median     3Q    Max 
-    ## -343.8 -116.3   53.0  102.1  268.0 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -371.98 -114.95   42.76  106.23  236.01 
     ## 
     ## Coefficients:
     ##                   Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)      2.150e+03  6.453e+01  33.312   <2e-16 ***
-    ## sample_time      6.757e-04  1.036e-03   0.652    0.516    
-    ## perimeter_m     -4.322e+00  8.126e+00  -0.532    0.596    
-    ## surface_area_m2  7.501e+00  1.407e+01   0.533    0.596    
+    ## (Intercept)      2.260e+03  5.471e+01  41.307   <2e-16 ***
+    ## sample_time     -1.295e-03  9.664e-04  -1.340    0.184    
+    ## perimeter_m      1.016e+00  3.321e+00   0.306    0.760    
+    ## surface_area_m2 -2.678e+00  9.447e+00  -0.284    0.777    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 143.6 on 72 degrees of freedom
-    ##   (23 observations deleted due to missingness)
-    ## Multiple R-squared:  0.009717,   Adjusted R-squared:  -0.03154 
-    ## F-statistic: 0.2355 on 3 and 72 DF,  p-value: 0.8713
+    ## Residual standard error: 150.8 on 87 degrees of freedom
+    ##   (26 observations deleted due to missingness)
+    ## Multiple R-squared:  0.02152,    Adjusted R-squared:  -0.01222 
+    ## F-statistic: 0.6377 on 3 and 87 DF,  p-value: 0.5928
 
 ``` r
 Anova(model2)
@@ -512,10 +540,10 @@ Anova(model2)
     ## 
     ## Response: TA
     ##                  Sum Sq Df F value Pr(>F)
-    ## sample_time        8767  1  0.4251 0.5165
-    ## perimeter_m        5834  1  0.2829 0.5964
-    ## surface_area_m2    5863  1  0.2843 0.5955
-    ## Residuals       1484760 72
+    ## sample_time       40814  1  1.7948 0.1838
+    ## perimeter_m        2130  1  0.0936 0.7603
+    ## surface_area_m2    1828  1  0.0804 0.7775
+    ## Residuals       1978461 87
 
 ### ph vs TA
 
@@ -530,18 +558,18 @@ summary(model3)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.35725 -0.11379 -0.02799  0.14542  0.32309 
+    ## -0.36390 -0.12019 -0.02608  0.13313  0.32519 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 11.2415088  0.2699797   41.64   <2e-16 ***
-    ## TA          -0.0013415  0.0001231  -10.89   <2e-16 ***
+    ## (Intercept) 11.5910666  0.2353692   49.25   <2e-16 ***
+    ## TA          -0.0015091  0.0001063  -14.20   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.1611 on 97 degrees of freedom
-    ## Multiple R-squared:  0.5503, Adjusted R-squared:  0.5456 
-    ## F-statistic: 118.7 on 1 and 97 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 0.1572 on 115 degrees of freedom
+    ## Multiple R-squared:  0.6368, Adjusted R-squared:  0.6336 
+    ## F-statistic: 201.6 on 1 and 115 DF,  p-value: < 2.2e-16
 
 ### pH vs substrate
 
@@ -556,19 +584,19 @@ summary(model4)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.44380 -0.12558 -0.01916  0.09495  0.70993 
+    ## -0.58154 -0.12656 -0.01449  0.10988  0.70968 
     ## 
     ## Coefficients:
-    ##                    Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)         8.39534    0.03035 276.649  < 2e-16 ***
-    ## substratelimestone -0.10721    0.04784  -2.241   0.0273 *  
-    ## substrateocean     -0.31442    0.05979  -5.258 8.79e-07 ***
+    ##                     Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)         8.295278   0.031077 266.927  < 2e-16 ***
+    ## substratelimestone -0.007992   0.053280  -0.150 0.881034    
+    ## substrateocean     -0.218985   0.063689  -3.438 0.000818 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2124 on 96 degrees of freedom
-    ## Multiple R-squared:  0.2257, Adjusted R-squared:  0.2096 
-    ## F-statistic: 13.99 on 2 and 96 DF,  p-value: 4.646e-06
+    ## Residual standard error: 0.2486 on 114 degrees of freedom
+    ## Multiple R-squared:  0.09931,    Adjusted R-squared:  0.08351 
+    ## F-statistic: 6.285 on 2 and 114 DF,  p-value: 0.002575
 
 ``` r
 Anova(model4)
@@ -577,9 +605,9 @@ Anova(model4)
     ## Anova Table (Type II tests)
     ## 
     ## Response: pH
-    ##           Sum Sq Df F value    Pr(>F)    
-    ## substrate 1.2629  2  13.993 4.646e-06 ***
-    ## Residuals 4.3320 96                      
+    ##           Sum Sq  Df F value   Pr(>F)   
+    ## substrate 0.7769   2  6.2847 0.002575 **
+    ## Residuals 7.0463 114                    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -596,19 +624,19 @@ summary(model5)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -391.11  -74.53   25.46   88.56  286.38 
+    ## -391.11  -69.20   25.46   77.99  265.51 
     ## 
     ## Coefficients:
     ##                    Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)         2141.32      17.69 121.028  < 2e-16 ***
-    ## substratelimestone    78.19      27.89   2.804 0.006114 ** 
-    ## substrateocean       122.84      34.86   3.524 0.000654 ***
+    ## (Intercept)         2188.25      16.94 129.198   <2e-16 ***
+    ## substratelimestone    31.26      29.04   1.077   0.2840    
+    ## substrateocean        77.02      34.71   2.219   0.0285 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 123.8 on 96 degrees of freedom
-    ## Multiple R-squared:  0.1392, Adjusted R-squared:  0.1213 
-    ## F-statistic: 7.763 on 2 and 96 DF,  p-value: 0.0007501
+    ## Residual standard error: 135.5 on 114 degrees of freedom
+    ## Multiple R-squared:  0.04314,    Adjusted R-squared:  0.02635 
+    ## F-statistic:  2.57 on 2 and 114 DF,  p-value: 0.08099
 
 ``` r
 Anova(model5)
@@ -617,9 +645,9 @@ Anova(model5)
     ## Anova Table (Type II tests)
     ## 
     ## Response: TA
-    ##            Sum Sq Df F value    Pr(>F)    
-    ## substrate  238134  2  7.7625 0.0007501 ***
-    ## Residuals 1472514 96                      
+    ##            Sum Sq  Df F value  Pr(>F)  
+    ## substrate   94356   2  2.5696 0.08099 .
+    ## Residuals 2093000 114                  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -636,19 +664,19 @@ summary(model6)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -4.7083 -2.2163 -0.2102  1.5837  8.1507 
+    ## -4.2735 -2.2242 -0.3242  1.4265  8.5855 
     ## 
     ## Coefficients:
     ##                    Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)         26.7083     0.3933  67.915   <2e-16 ***
-    ## substratelimestone   0.3160     0.6199   0.510    0.611    
-    ## substrateocean      -1.1981     0.7749  -1.546    0.125    
+    ## (Intercept)         26.2735     0.3304  79.532   <2e-16 ***
+    ## substratelimestone   0.7507     0.5664   1.325    0.188    
+    ## substrateocean      -0.8799     0.6770  -1.300    0.196    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 2.753 on 96 degrees of freedom
-    ## Multiple R-squared:  0.0354, Adjusted R-squared:  0.0153 
-    ## F-statistic: 1.762 on 2 and 96 DF,  p-value: 0.1773
+    ## Residual standard error: 2.643 on 114 degrees of freedom
+    ## Multiple R-squared:  0.04054,    Adjusted R-squared:  0.02371 
+    ## F-statistic: 2.408 on 2 and 114 DF,  p-value: 0.09453
 
 ``` r
 Anova(model6)
@@ -657,6 +685,8 @@ Anova(model6)
     ## Anova Table (Type II tests)
     ## 
     ## Response: temp_pool
-    ##           Sum Sq Df F value Pr(>F)
-    ## substrate   26.7  2  1.7616 0.1773
-    ## Residuals  727.5 96
+    ##           Sum Sq  Df F value  Pr(>F)  
+    ## substrate  33.64   2  2.4083 0.09453 .
+    ## Residuals 796.24 114                  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1

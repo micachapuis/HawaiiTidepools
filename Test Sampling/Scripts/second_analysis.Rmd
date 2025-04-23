@@ -12,6 +12,7 @@ library(seacarb)
 library(lubridate)
 library(car)
 library(lubridateExtras)
+library(lme4)
 ```
 
 ## Load in Data
