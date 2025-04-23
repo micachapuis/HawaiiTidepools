@@ -14,7 +14,7 @@ library(lubridate)
 library(car)
 ```
 
-## Load in Data
+## Load in Data n
 ```{r, message = FALSE}
 chem <- read_csv(here("Test Sampling", "Data", "tidepool_chemistry.csv"))
 params <- read_csv(here("Test Sampling", "Data", "tidepool_parameters.csv"))
