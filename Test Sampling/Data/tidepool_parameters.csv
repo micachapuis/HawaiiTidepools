@@ -1,13 +1,13 @@
-date,site,pool_number,pool_ID,substrate,latitude,longitude,tide_height,perimeter_m,surface_area_m2,depth,pool_volume,notes
-2025/02/16,Sandy Beach,1,sb_p1,basalt,,,,6.61,2.04386688,,,
-2025/02/16,Sandy Beach,2,sb_p2,basalt,,,,3.5,0.27870912,,,"same height as 1, much smaller and shallower, not much in it"
-2025/02/16,Sandy Beach,3,sb_p3,basalt,,,,15.9,4.75870016,,,"highest, fairly empty, very big"
-2025/02/16,Sandy Beach,4,sb_p4,basalt,,,,15.3,9.1870784,,,"lots of algae, lowest tide height, saw it getting inflow at ~2:30"
-2025/02/16,Sandy Beach,5,sb_p5,basalt,,,,7.5,1.63096448,,,lower than 3 but very close
-2025/03/11,Sandy Beach,6,sb_p6,basalt,,,,4.05,0.3612896,,,"fairly small, not much in it. loss of water from sampling noticeable"
-2025/02/23,Diamond Head,1,dh_p1,limestone + basalt,,,,6.89,2.02322176,,,"mostly sand, deeper on both ends and shallow in the middle. ends completely separated by 11:04. highest"
-2025/02/23,Diamond Head,2,dh_p2,limestone,,,,2.88,0.40257984,,,cyanobacteria. right by 4 but a big higher. very small
-2025/02/23,Diamond Head,3,dh_p3,basalt,,,,3.29,0.62967616,,,"lots of turfy stuff, deep in one point. some fish. fairly low but never flooded"
-2025/02/23,Diamond Head,4,dh_p4,limestone,,,,5.88,2.29160832,,,"lowest height. had gobies, lots of small reddish/dark rocks. algae mostly in a corner. had inflow at 9:50 but still collected water"
-2025/02/23,Diamond Head,5,dh_p5,limestone,,,,8.43,2.61160768,,,mostly turfy stuff + rock. juvenile sargeants?. higher than 2 and 4
-2025/03/02,Diamond Head,6,dh_p6,limestone,,,,,2.12644736,,,"sandy, padina, rocks, many fish"
+date,site,pool_number,pool_ID,substrate,latitude,longitude,tide_height,perimeter_m,surface_area_m2,depth,pool_volume,mean_comm_comp_time,notes
+2025/02/16,Sandy Beach,1,sb_p1,basalt,,,,6.61,2.04386688,,,31,
+2025/02/16,Sandy Beach,2,sb_p2,basalt,,,,3.5,0.27870912,,,,"same height as 1, much smaller and shallower, not much in it"
+2025/02/16,Sandy Beach,3,sb_p3,basalt,,,,26.31,4.75870016,,,,"highest, fairly empty, very big"
+2025/02/16,Sandy Beach,4,sb_p4,basalt,,,,19.4,9.1870784,,,,"lots of algae, lowest tide height, saw it getting inflow at ~2:30"
+2025/02/16,Sandy Beach,5,sb_p5,basalt,,,,9.51,1.63096448,,,23,lower than 3 but very close
+2025/03/11,Sandy Beach,6,sb_p6,basalt,,,,4.05,0.3612896,,,16,"fairly small, not much in it. loss of water from sampling noticeable"
+2025/02/23,Diamond Head,1,dh_p1,limestone + basalt,,,,6.89,2.02322176,,,,"mostly sand, deeper on both ends and shallow in the middle. ends completely separated by 11:04. highest"
+2025/02/23,Diamond Head,2,dh_p2,limestone,,,,2.88,0.40257984,,,,cyanobacteria. right by 4 but a big higher. very small
+2025/02/23,Diamond Head,3,dh_p3,basalt,,,,3.29,0.62967616,,,,"lots of turfy stuff, deep in one point. some fish. fairly low but never flooded"
+2025/02/23,Diamond Head,4,dh_p4,limestone,,,,5.88,2.29160832,,,,"lowest height. had gobies, lots of small reddish/dark rocks. algae mostly in a corner. had inflow at 9:50 but still collected water"
+2025/02/23,Diamond Head,5,dh_p5,limestone,,,,8.43,2.61160768,,,,mostly turfy stuff + rock. juvenile sargeants?. higher than 2 and 4
+2025/03/02,Diamond Head,6,dh_p6,limestone,,,,,2.12644736,,,,"sandy, padina, rocks, many fish"

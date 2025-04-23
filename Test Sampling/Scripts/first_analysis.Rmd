@@ -161,8 +161,13 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +
   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature") + theme(axis.text.x = element_text(angle = 30))
 ```
 ```{r}
+data %>% filter(site == "Diamond Head") %>%
+  ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature - DH")  + theme(axis.text.x = element_text(angle = 30)) 
+```
+
+```{r}
 data %>% filter(site == "Sandy Beach") %>%
-  ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature")  + theme(axis.text.x = element_text(angle = 30))
+  ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature - SB")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 ### pH
@@ -175,10 +180,14 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = pool_number)) +
 data %>% ggplot(aes(x = sample_time, y = pH_probe, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (probe)")  + theme(axis.text.x = element_text(angle = 30))
 ```
+```{r}
+data %>% filter(site == "Diamond Head") %>%
+  ggplot(aes(x = sample_time, y = pH, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris) - DH")  + theme(axis.text.x = element_text(angle = 30))
+```
 
 ```{r}
 data %>% filter(site == "Sandy Beach") %>%
-  ggplot(aes(x = sample_time, y = pH, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
+  ggplot(aes(x = sample_time, y = pH, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris) - SB")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 
@@ -186,10 +195,14 @@ data %>% filter(site == "Sandy Beach") %>%
 ```{r}
 data %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
+```{r}
+data %>% filter(site == "Diamond Head") %>%
+  ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized - DH")  + theme(axis.text.x = element_text(angle = 30))
+```
 
 ```{r}
 data %>% filter(site == "Sandy Beach") %>%
-  ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
+  ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized - SB")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 
@@ -198,8 +211,13 @@ data %>% filter(site == "Sandy Beach") %>%
 data %>% ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 ```{r}
+data %>% filter(site == "Diamond Head") %>%
+  ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field) - DH")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+```{r}
 data %>% filter(site == "Sandy Beach") %>%
-  ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field)")  + theme(axis.text.x = element_text(angle = 30))
+  ggplot(aes(x = sample_time, y = salinity_field, color = pool_number)) +   facet_wrap(~date, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (field) - SB")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 

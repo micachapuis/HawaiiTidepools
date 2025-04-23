@@ -11,6 +11,7 @@ library(here)
 library(seacarb)
 library(lubridate)
 library(car)
+library(lubridateExtras)
 ```
 
 ## Load in Data
@@ -68,12 +69,18 @@ Salinity Normalize TA
 data <- data %>% mutate(TA_norm = TA*salinity_lab/35)
 ```
 
+Rounding sample time
+```{r}
+data <- data %>% mutate(round_time = round_hms(sample_time, "hour"),
+                        rounded_time = hour(round_time))
+```
+
 
 Calculate delta pH and delta TA
 ```{r}
 delta_calc <- data %>% 
-  select(date, site, pool_number, substrate, day_night, time_point, temp_pool, sample_time, pH, TA_norm)  %>%
-  group_by(date, site, pool_number, substrate, day_night) %>%  # group by metadata
+  select(date, site, pool_number, pool_ID, substrate, day_night, time_point, temp_pool, sample_time, pH, TA_norm)  %>%
+  group_by(date, site, pool_number, pool_ID, substrate, day_night) %>%  # group by metadata
   arrange(time_point, .by_group = TRUE) %>%  # ensure correct order
   reframe(
     delta_pH = if_else((date == "2025-02-16"), 
@@ -103,29 +110,51 @@ plot(data$salinity_field, data$salinity_lab)
 ```
 
 ```{r}
-data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = pH)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
+data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = pH)) + geom_boxplot() + geom_point() + facet_wrap(~rounded_time)
 ```
 ```{r}
-data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = TA_norm)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
+data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = TA_norm)) + geom_boxplot() + geom_point() + facet_wrap(~rounded_time)
 ```
 
 ```{r}
+# mean pH for each tidepool
 data %>% group_by(site, pool_number) %>% mutate(pH_mean = mean(pH)) %>%
-  filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = pH_mean)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
+  filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = pH_mean)) + geom_boxplot() + geom_point() + facet_wrap(~day_night)
+```
+```{r}
+# mean pH for each date
+data %>% group_by(date, site) %>% mutate(pH_mean = mean(pH)) %>%
+  filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = pH_mean)) + geom_boxplot() + geom_point() + facet_wrap(~day_night)
+# for night the basalt point at the same ph as limestone is DH basalt, for day DH basalt is higher point ~8.4 and ~8.2
 ```
 
 ```{r}
-delta_calc %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = delta_TA)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
+delta_calc %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = delta_TA)) + geom_boxplot() + geom_point() + facet_wrap(~day_night)
 ```
 
 ```{r}
-delta_calc %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = day_night, y = delta_pH)) + geom_boxplot() + geom_point() + facet_wrap(~substrate)
+delta_calc %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = substrate, y = delta_pH)) + geom_boxplot() + geom_point() + facet_wrap(~day_night)
 ```
+
+```{r}
+data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Pool Temp")  + theme(axis.text.x = element_text(angle = 30))
+```
+```{r}
+data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Field)")  + theme(axis.text.x = element_text(angle = 30))
+```
+```{r}
+data %>% ggplot(aes(x = sample_time, y = salinity_field, color= site)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Field)")  + theme(axis.text.x = element_text(angle = 30))
+```
+
 
 ```{r}
 data %>% ggplot(aes(x = sample_time, y = pH)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
+
 ```{r}
 data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "TA Norm")  + theme(axis.text.x = element_text(angle = 30))
@@ -147,5 +176,19 @@ delta_calc %>%
   scale_color_manual(values = c("gray20", "sienna2")) +
   guides(color = "none") +
   labs(x = "Delta pH", y = "Delta TA") 
+```
+
+
+-----
+```{r message = FALSE}
+producers <- read_csv(here("Test Sampling", "Data", "prodcover.csv"))
+data <- left_join(data, producers, by = "pool_ID")
+delta_calc <- left_join(delta_calc, producers, by = "pool_ID")
+```
+
+
+```{r}
+mod1 <- lmer(delta_pH ~ prods_pcover + (1|pool_ID), data = delta_calc)
+summary(mod1)
 ```
 
