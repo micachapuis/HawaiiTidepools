@@ -13,6 +13,9 @@ library(lubridate)
 library(car)
 library(lubridateExtras)
 library(lme4)
+library(scales)
+library(ggeffects)
+library(sjPlot)
 ```
 
 ## Load in Data
@@ -104,6 +107,14 @@ delta_calc <- data %>%
     distinct(date, site, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
 ```
 
+Normalize delta pH and TA to by hour
+```{r}
+delta_calc <- delta_calc %>% mutate(delta_pH_norm = (delta_pH/delta_time)*60,
+                                    delta_TA_norm = (delta_TA/delta_time)*60)
+```
+
+
+
 ## Data Viz
 
 ```{r}
@@ -142,6 +153,20 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Pool Temp")  + theme(axis.text.x = element_text(angle = 30))
 ```
 ```{r}
+# committee meeting fig
+data %>% ggplot(aes(x = sample_time, y = temp_pool, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time", y = "Temperature (°C)")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25)) 
+```
+
+
+
+```{r}
 data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Field)")  + theme(axis.text.x = element_text(angle = 30))
 ```
@@ -149,47 +174,148 @@ data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
 data %>% ggplot(aes(x = sample_time, y = salinity_field, color= site)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Field)")  + theme(axis.text.x = element_text(angle = 30))
 ```
+```{r}
+# committee meeting fig
+data %>% ggplot(aes(x = sample_time, y = salinity_field, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time", y = "Salinity")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25)) 
+```
+
+
 
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = pH)) +
-    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
+data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
+    facet_wrap(~substrate) + 
+  geom_smooth(method = "gam", se=FALSE) + 
+  geom_point() + theme_minimal() +
+  labs(title = "pH (tris)")  + 
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+```{r}
+# committee meeting fig
+data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25)) 
 ```
 
 ```{r}
 data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
-    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "TA Norm")  + theme(axis.text.x = element_text(angle = 30))
+    facet_wrap(~substrate) +
+  geom_smooth(method = "gam", se=FALSE) + 
+  geom_point() + 
+  theme_minimal() + 
+  labs(title = "TA Norm")  +
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+```{r}
+# committee meeting fig
+data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time", y = "Total Alkalinity")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25)) 
 ```
 
 
 ```{r}
-data %>% filter(!substrate %in% "ocean") %>% ggplot(aes(x = pH, y = TA_norm)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~substrate)
+# committee meeting figure
+data %>% 
+  filter(!substrate %in% "ocean") %>% 
+  ggplot(aes(x = pH, y = TA_norm)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  theme_bw() + 
+  labs(x = "pH", y = "Total Alkalinity") 
 ```
 
 ```{r}
+# committee meeting figure
 delta_calc %>% 
   filter(substrate == "limestone" | substrate == "basalt") %>%
-  ggplot(aes(x = delta_pH, y = delta_TA)) + 
-  facet_wrap(~substrate) +
+  ggplot(aes(x = delta_pH_norm, y = delta_TA_norm)) + 
+  facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
   geom_point() + 
   geom_smooth(method = "lm") + 
   theme_bw() + 
-  scale_color_manual(values = c("gray20", "sienna2")) +
-  guides(color = "none") +
-  labs(x = "Delta pH", y = "Delta TA") 
+  labs(x = "Delta pH/Hour", y = "Delta TA/Hour") 
 ```
 
 
 -----
 ```{r message = FALSE}
-producers <- read_csv(here("Test Sampling", "Data", "prodcover.csv"))
-data <- left_join(data, producers, by = "pool_ID")
-delta_calc <- left_join(delta_calc, producers, by = "pool_ID")
+#producers <- read_csv(here("Test Sampling", "Data", "prodcover.csv"))
+producers <- read_csv(here("Test Sampling", "Data", "producers.csv"))
+new_data <- left_join(data, producers, by = "pool_ID")
+new_delta_calc <- left_join(delta_calc, producers, by = "pool_ID")
 ```
 
 
 ```{r}
-mod1 <- lmer(delta_pH ~ prods_pcover + (1|pool_ID), data = delta_calc)
+new_delta_calc %>% ggplot(aes(x = (turf_cyano_cover+macro_cover), y = delta_pH)) + geom_point()
+```
+
+```{r}
+mod1 <- lm(mean_pH ~ turf_cyano_cover*substrate.x + macro_cover*substrate.x, data = mean_ph)
 summary(mod1)
+anova(mod1)
+plot(ggeffect(mod1))
+plot_model(mod1, type = "eff", terms = c("turf_cyano_cover", "substrate.x"))
+plot_model(mod1, type = "eff", terms = c("macro_cover", "substrate.x"))
+```
+
+Mean Ph
+
+```{r}
+mean_ph <- data %>% group_by(pool_ID, substrate) %>% summarise(mean_pH = mean(pH)) 
+mean_pH_day <- data %>% filter(day_night == "day") %>% group_by(pool_ID, substrate) %>% summarise(mean_pH = mean(pH))
+
+mean_ph <- left_join(mean_ph, producers, by = "pool_ID")
+mean_pH_day <- left_join(mean_pH_day, producers, by = "pool_ID")
+```
+
+```{r}
+# committee meeting figure
+mean_ph %>% filter(!substrate.x == "ocean") %>%
+  ggplot(aes(x = (turf_cyano_cover), y = mean_pH, color = substrate.x)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(x = "Producer Percent Cover", y = "Mean pH", color = "Substrate") +
+  theme_bw() +
+  scale_color_manual(values = c('#e6194b','#3cb44b'), labels = c("Basalt", "Limestone"))
+```
+
+
+```{r}
+#mean_pH_day %>% ggplot(aes(x = (turf_cyano_cover+macro_cover), y = mean_pH, color = substrate.x)) + 
+#  geom_point() +
+#  geom_smooth(method = "lm", se = FALSE)
+
+mean_pH_day %>% filter(!substrate.x == "ocean") %>%
+  ggplot(aes(x = (turf_cyano_cover+macro_cover), y = mean_pH, color = substrate.x)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(x = "Producer Percent Cover", y = "Mean pH", color = "Substrate") +
+  theme_bw() +
+  scale_color_manual(values = c('#e6194b','#3cb44b'), labels = c("Basalt", "Limestone"))
+
 ```
 

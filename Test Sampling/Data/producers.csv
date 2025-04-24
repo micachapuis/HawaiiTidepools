@@ -1,9 +1,9 @@
-date,site,pool_number,pool_ID,substrate,turf_cyano,lyngbia_majuscula,padina_sanctae-crucis,sargassum_spp,ahnfeltiopsis_concinna,spyridia_filamentosa,gelidiella_acerosa,bornetella_sphaerica,dictyosphaeria_versluysii,codium_edule,acanthophora_spicifera,red_macro,CCA,sponge,total_points,substrate_cover,turf_cyano_cover,macro_cover,CCA_cover,sponge_cover,cover_sum,notes
-2025/03/17,Diamond Head,2,dh_p2,15,19,0,0,0,3,0,0,1,2,0,0,0,0,0,40,37.5,47.5,15,0,0,100,many hermit crabs within ahnfeltiopsis
-2025/03/17,Diamond Head,3,dh_p3,26,35,12,1,0,3,0,0,0,0,0,0,0,1,0,78,33.33333333,60.25641026,5.128205128,1.282051282,0,100,
-2025/03/17,Diamond Head,4,dh_p4,133,33,0,12,1,3,3,1,1,0,0,0,0,0,0,187,71.12299465,17.64705882,11.22994652,0,0,100,unsure about gelidiella ID
-2025/03/17,Diamond Head,5,dh_p5,180,87,2,0,0,1,0,0,0,0,0,0,0,0,3,273,65.93406593,32.6007326,0.3663003663,0,1.098901099,100,
-2025/03/17,Diamond Head,6,dh_p6,138,35,0,19,1,1,0,1,0,0,1,0,2,0,0,198,69.6969697,17.67676768,12.62626263,0,0,100,unsure about gelidiella ID
-2025/04/13,Sandy Beach,6,sb_p6,53,5,0,0,0,0,0,0,0,0,0,0,0,0,0,58,91.37931034,8.620689655,0,0,0,100,
-2025/04/13,Sandy Beach,1,sb_p1,114,92,0,0,0,0,0,0,0,0,0,0,0,0,0,206,55.33980583,44.66019417,0,0,0,100,8 of the turf/cyano points are cyano
-2025/04/13,Sandy Beach,5,sb_p5,76,97,0,0,0,0,0,0,0,0,0,1,0,0,0,174,43.67816092,55.74712644,0.5747126437,0,0,100,1 of the turf/cyano points is cyano. More small bits of A. spificera throughout
+date,site,pool_number,pool_ID,substrate,rock_sand,turf_cyano,lyngbia_majuscula,padina_sanctae-crucis,sargassum_spp,ahnfeltiopsis_concinna,spyridia_filamentosa,gelidiella_acerosa,bornetella_sphaerica,dictyosphaeria_versluysii,codium_edule,acanthophora_spicifera,red_macro,CCA,sponge,total_points,rock_sand_cover,turf_cyano_cover,macro_cover,CCA_cover,sponge_cover,cover_sum,notes
+2025/03/17,Diamond Head,2,dh_p2,limestone,15,19,0,0,0,3,0,0,1,2,0,0,0,0,0,40,37.5,47.5,15,0,0,100,many hermit crabs within ahnfeltiopsis
+2025/03/17,Diamond Head,3,dh_p3,basalt,26,35,12,1,0,3,0,0,0,0,0,0,0,1,0,78,33.33333333,60.25641026,5.128205128,1.282051282,0,100,
+2025/03/17,Diamond Head,4,dh_p4,limestone,133,33,0,12,1,3,3,1,1,0,0,0,0,0,0,187,71.12299465,17.64705882,11.22994652,0,0,100,unsure about gelidiella ID
+2025/03/17,Diamond Head,5,dh_p5,limestone,180,87,2,0,0,1,0,0,0,0,0,0,0,0,3,273,65.93406593,32.6007326,0.3663003663,0,1.098901099,100,
+2025/03/17,Diamond Head,6,dh_p6,limestone,138,35,0,19,1,1,0,1,0,0,1,0,2,0,0,198,69.6969697,17.67676768,12.62626263,0,0,100,unsure about gelidiella ID
+2025/04/13,Sandy Beach,1,sb_p1,basalt,114,92,0,0,0,0,0,0,0,0,0,0,0,0,0,206,55.33980583,44.66019417,0,0,0,100,8 of the turf/cyano points are cyano
+2025/04/13,Sandy Beach,5,sb_p5,basalt,76,97,0,0,0,0,0,0,0,0,0,1,0,0,0,174,43.67816092,55.74712644,0.5747126437,0,0,100,1 of the turf/cyano points is cyano. More small bits of A. spificera throughout
+2025/04/13,Sandy Beach,6,sb_p6,basalt,53,5,0,0,0,0,0,0,0,0,0,0,0,0,0,58,91.37931034,8.620689655,0,0,0,100,

@@ -6,7 +6,7 @@ output: github_document
 ---
 
 ## Load Libraries
-```{r}
+```{r message = FALSE}
 library(tidyverse)
 library(here)
 ```
@@ -17,19 +17,13 @@ prods <- read_csv(here("Test Sampling", "Data", "producers.csv"))
 cons <- read_csv(here("Test Sampling", "Data", "consumers.csv"))
 ```
 
-```{r}
-prods_summary <- prods %>% group_by(date, site, pool_number, pool_ID)  %>% summarise(prods_pcover = sum(turf_cyano_cover, macro_cover, CCA_cover))
-write_csv(prods_summary, here("Test Sampling", "Data", "prodcover.csv"))
-```
-
-
 
 ## Producers
 ```{r}
 prods_long <- prods %>%
-  select(-c("substrate_cover":"notes")) %>%
+  select(-c("rock_sand_cover":"notes")) %>%
   pivot_longer(
-    cols = c("substrate":"sponge"),
+    cols = c("rock_sand":"sponge"),
     names_to = "id",
     values_to = "num_points")
 ```
@@ -41,7 +35,8 @@ prods_long %>% ggplot(aes(x= factor(pool_number),
                fill= factor(id), 
                color= id)) + # set lines surrounding each color to match the fill colors 
       geom_bar(stat="identity", position="fill") + # stacked bars
-      facet_wrap(~site) + 
+      facet_wrap(~substrate, scales = "free_x",
+                 labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) + 
   
       labs(x = "Pool", # labels
            y="Relative Abundance",
@@ -57,16 +52,16 @@ prods_long %>% ggplot(aes(x= factor(pool_number),
       
       guides(color = "none") + # keep only legend for fill since fill and color are the same
       
-      scale_fill_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#008080', '#e6beff', '#800000', '#aaffc3', '#808000', "lightblue")) +
+      scale_fill_manual(values = c('#e6194b', '#3cb44b', "lightblue", '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#800000', '#008080',  '#e6beff', '#aaffc3', '#ffe119' , '#808000')) +
       
-      scale_color_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#008080', '#e6beff', '#800000', '#aaffc3', '#808000', "lightblue"))
+      scale_color_manual(values = c('#e6194b', '#3cb44b', "lightblue", '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#800000', '#008080',  '#e6beff', '#aaffc3', '#ffe119' , '#808000'))
 ```
 
 ```{r}
 prods_cover_long <- prods %>%
-  select(-c("substrate":"total_points", "cover_sum", "notes")) %>%
+  select(-c("rock_sand":"total_points", "cover_sum", "notes")) %>%
   pivot_longer(
-    cols = c("substrate_cover":"sponge_cover"),
+    cols = c("rock_sand_cover":"sponge_cover"),
     names_to = "id",
     values_to = "num_points")
 ```
@@ -78,7 +73,7 @@ prods_cover_long %>% ggplot(aes(x= factor(pool_number),
                fill= factor(id), 
                color= id)) + # set lines surrounding each color to match the fill colors
       geom_bar(stat="identity", position="fill") + # stacked bars
-      facet_wrap(~site) +
+      facet_wrap(~substrate, scales = "free_x") +
   
       labs(x = "Pool", # labels
            y="Relative Abundance",
@@ -105,7 +100,7 @@ prods_cover_long %>% ggplot(aes(x= factor(pool_number),
 cons %>% ggplot(aes(x = factor(pool_number),
                     y = consumer_density)) +
   geom_bar(stat = "identity") +
-  facet_wrap(~site) 
+  facet_wrap(~substrate, scale = "free_x") 
 ```
 
 
@@ -124,7 +119,7 @@ cons_long %>% ggplot(aes(x = factor(pool_number),
                     y = count , 
                     fill = id)) + 
   geom_bar(stat = "identity") +
-  facet_wrap(~site)
+  facet_wrap(~substrate, scale = "free_x")
 ```
 
 ```{r}
@@ -133,7 +128,8 @@ cons_long %>% ggplot(aes(x= factor(pool_number),
                fill= factor(id), 
                color= id)) + # set lines surrounding each color to match the fill colors
       geom_bar(stat="identity", position="fill") + # stacked bars
-      facet_wrap(~site) +
+      facet_wrap(~substrate, scale = "free_x",
+                 labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
    
       labs(x = "Pool", # labels
            y="Relative Abundance",
