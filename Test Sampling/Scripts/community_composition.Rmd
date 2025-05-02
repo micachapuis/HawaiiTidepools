@@ -30,7 +30,7 @@ prods_long <- prods %>%
 
 
 ```{r}
-prods_long %>% ggplot(aes(x= factor(pool_number),
+prods_long %>% ggplot(aes(x= factor(pool_ID),
                y = num_points, 
                fill= factor(id), 
                color= id)) + # set lines surrounding each color to match the fill colors 
@@ -50,25 +50,25 @@ prods_long %>% ggplot(aes(x= factor(pool_number),
             legend.text = element_text(size = 14)) +
     
       
-      guides(color = "none") + # keep only legend for fill since fill and color are the same
+      guides(color = "none") #+ # keep only legend for fill since fill and color are the same
       
-      scale_fill_manual(values = c('#e6194b', '#3cb44b', "lightblue", '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#800000', '#008080',  '#e6beff', '#aaffc3', '#ffe119' , '#808000')) +
+#      scale_fill_manual(values = c('#e6194b', '#3cb44b', "lightblue", '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#800000', '#008080',  '#e6beff', '#aaffc3', '#ffe119' , '#808000')) +
       
-      scale_color_manual(values = c('#e6194b', '#3cb44b', "lightblue", '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#800000', '#008080',  '#e6beff', '#aaffc3', '#ffe119' , '#808000'))
+#      scale_color_manual(values = c('#e6194b', '#3cb44b', "lightblue", '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#800000', '#008080',  '#e6beff', '#aaffc3', '#ffe119' , '#808000'))
 ```
 
 ```{r}
 prods_cover_long <- prods %>%
   select(-c("rock_sand":"total_points", "cover_sum", "notes")) %>%
   pivot_longer(
-    cols = c("rock_sand_cover":"sponge_cover"),
+    cols = c("rock_sand_cover":"slime_cover"),
     names_to = "id",
     values_to = "num_points")
 ```
 
 
 ```{r}
-prods_cover_long %>% ggplot(aes(x= factor(pool_number),
+prods_cover_long %>% ggplot(aes(x= factor(pool_ID),
                y = num_points, 
                fill= factor(id), 
                color= id)) + # set lines surrounding each color to match the fill colors
@@ -87,11 +87,11 @@ prods_cover_long %>% ggplot(aes(x= factor(pool_number),
             legend.text = element_text(size = 14)) +
     
       
-      guides(color = "none") + # keep only legend for fill since fill and color are the same
+      guides(color = "none")  + # keep only legend for fill since fill and color are the same
       
-      scale_fill_manual(values = c('#e6194b', '#ffe119', '#3cb44b', '#fabebe', '#f58231')) +
+      scale_fill_manual(values = c('#e6194b', '#ffe119', '#3cb44b', '#f58231', '#4363d8', '#aaffc3', "#7C4585")) +
       
-      scale_color_manual(values = c('#e6194b', '#ffe119', '#3cb44b', '#fabebe', '#f58231'))
+      scale_color_manual(values = c('#e6194b', '#ffe119',  '#3cb44b', '#f58231', '#4363d8', '#aaffc3', "#7C4585"))
 ```
 
 
@@ -109,13 +109,13 @@ cons %>% ggplot(aes(x = factor(pool_number),
 cons_long <- cons %>%
   select(-c("total_consumers":"notes")) %>%
   pivot_longer(
-    cols = c("sea_hare":"barnacle"),
+    cols = c("sea_hare":"jellyfish"),
     names_to = "id",
     values_to = "count")
 ```
 
 ```{r}
-cons_long %>% ggplot(aes(x = factor(pool_number),
+cons_long %>% ggplot(aes(x = factor(pool_ID),
                     y = count , 
                     fill = id)) + 
   geom_bar(stat = "identity") +
@@ -123,7 +123,7 @@ cons_long %>% ggplot(aes(x = factor(pool_number),
 ```
 
 ```{r}
-cons_long %>% ggplot(aes(x= factor(pool_number),
+cons_long %>% ggplot(aes(x= factor(pool_ID),
                y = count, 
                fill= factor(id), 
                color= id)) + # set lines surrounding each color to match the fill colors
@@ -145,8 +145,8 @@ cons_long %>% ggplot(aes(x= factor(pool_number),
       
       guides(color = "none") + # keep only legend for fill since fill and color are the same
       
-      scale_fill_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#aaffc3')) +
+      scale_fill_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#aaffc3', "#7C4585", "#F8F8E1")) +
       
-      scale_color_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#aaffc3'))
+      scale_color_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#aaffc3', "#7C4585", "#F8F8E1"))
 ```
 

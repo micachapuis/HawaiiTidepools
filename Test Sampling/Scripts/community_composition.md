@@ -7,24 +7,8 @@ Micaela Chapuis
 
 ``` r
 library(tidyverse)
-```
-
-    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ dplyr     1.1.4     ✔ readr     2.1.5
-    ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
-    ## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-    ## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-    ## ✔ purrr     1.0.2     
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
-
-``` r
 library(here)
 ```
-
-    ## here() starts at /Users/micachapuis/GitHub/HawaiiTidepools
 
 ## Load in Data
 
@@ -33,35 +17,25 @@ prods <- read_csv(here("Test Sampling", "Data", "producers.csv"))
 cons <- read_csv(here("Test Sampling", "Data", "consumers.csv"))
 ```
 
-``` r
-prods_summary <- prods %>% group_by(date, site, pool_number, pool_ID)  %>% summarise(prods_pcover = sum(turf_cyano_cover, macro_cover, CCA_cover))
-```
-
-    ## `summarise()` has grouped output by 'date', 'site', 'pool_number'. You can
-    ## override using the `.groups` argument.
-
-``` r
-write_csv(prods_summary, here("Test Sampling", "Data", "prodcover.csv"))
-```
-
 ## Producers
 
 ``` r
 prods_long <- prods %>%
-  select(-c("substrate_cover":"notes")) %>%
+  select(-c("rock_sand_cover":"notes")) %>%
   pivot_longer(
-    cols = c("substrate":"sponge"),
+    cols = c("rock_sand":"sponge"),
     names_to = "id",
     values_to = "num_points")
 ```
 
 ``` r
-prods_long %>% ggplot(aes(x= factor(pool_number),
+prods_long %>% ggplot(aes(x= factor(pool_ID),
                y = num_points, 
                fill= factor(id), 
                color= id)) + # set lines surrounding each color to match the fill colors 
       geom_bar(stat="identity", position="fill") + # stacked bars
-      facet_wrap(~site) + 
+      facet_wrap(~substrate, scales = "free_x",
+                 labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) + 
   
       labs(x = "Pool", # labels
            y="Relative Abundance",
@@ -75,31 +49,33 @@ prods_long %>% ggplot(aes(x= factor(pool_number),
             legend.text = element_text(size = 14)) +
     
       
-      guides(color = "none") + # keep only legend for fill since fill and color are the same
-      
-      scale_fill_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#008080', '#e6beff', '#800000', '#aaffc3', '#808000', "lightblue")) +
-      
-      scale_color_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#008080', '#e6beff', '#800000', '#aaffc3', '#808000', "lightblue"))
+      guides(color = "none") #+ # keep only legend for fill since fill and color are the same
 ```
 
-![](community_composition_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](community_composition_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
+#      scale_fill_manual(values = c('#e6194b', '#3cb44b', "lightblue", '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#800000', '#008080',  '#e6beff', '#aaffc3', '#ffe119' , '#808000')) +
+      
+#      scale_color_manual(values = c('#e6194b', '#3cb44b', "lightblue", '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#800000', '#008080',  '#e6beff', '#aaffc3', '#ffe119' , '#808000'))
+```
 
 ``` r
 prods_cover_long <- prods %>%
-  select(-c("substrate":"total_points", "cover_sum", "notes")) %>%
+  select(-c("rock_sand":"total_points", "cover_sum", "notes")) %>%
   pivot_longer(
-    cols = c("substrate_cover":"sponge_cover"),
+    cols = c("rock_sand_cover":"slime_cover"),
     names_to = "id",
     values_to = "num_points")
 ```
 
 ``` r
-prods_cover_long %>% ggplot(aes(x= factor(pool_number),
+prods_cover_long %>% ggplot(aes(x= factor(pool_ID),
                y = num_points, 
                fill= factor(id), 
                color= id)) + # set lines surrounding each color to match the fill colors
       geom_bar(stat="identity", position="fill") + # stacked bars
-      facet_wrap(~site) +
+      facet_wrap(~substrate, scales = "free_x") +
   
       labs(x = "Pool", # labels
            y="Relative Abundance",
@@ -113,14 +89,16 @@ prods_cover_long %>% ggplot(aes(x= factor(pool_number),
             legend.text = element_text(size = 14)) +
     
       
-      guides(color = "none") + # keep only legend for fill since fill and color are the same
-      
-      scale_fill_manual(values = c('#e6194b', '#ffe119', '#3cb44b', '#fabebe', '#f58231')) +
-      
-      scale_color_manual(values = c('#e6194b', '#ffe119', '#3cb44b', '#fabebe', '#f58231'))
+      guides(color = "none") # + # keep only legend for fill since fill and color are the same
 ```
 
-![](community_composition_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](community_composition_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+    #  scale_fill_manual(values = c('#e6194b', '#ffe119', '#3cb44b', '#fabebe', '#f58231')) +
+      
+     # scale_color_manual(values = c('#e6194b', '#ffe119', '#3cb44b', '#fabebe', '#f58231'))
+```
 
 ## Consumers
 
@@ -128,37 +106,38 @@ prods_cover_long %>% ggplot(aes(x= factor(pool_number),
 cons %>% ggplot(aes(x = factor(pool_number),
                     y = consumer_density)) +
   geom_bar(stat = "identity") +
-  facet_wrap(~site) 
+  facet_wrap(~substrate, scale = "free_x") 
 ```
 
-![](community_composition_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](community_composition_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 cons_long <- cons %>%
   select(-c("total_consumers":"notes")) %>%
   pivot_longer(
-    cols = c("sea_hare":"barnacle"),
+    cols = c("sea_hare":"jellyfish"),
     names_to = "id",
     values_to = "count")
 ```
 
 ``` r
-cons_long %>% ggplot(aes(x = factor(pool_number),
+cons_long %>% ggplot(aes(x = factor(pool_ID),
                     y = count , 
                     fill = id)) + 
   geom_bar(stat = "identity") +
-  facet_wrap(~site)
+  facet_wrap(~substrate, scale = "free_x")
 ```
 
-![](community_composition_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](community_composition_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
-cons_long %>% ggplot(aes(x= factor(pool_number),
+cons_long %>% ggplot(aes(x= factor(pool_ID),
                y = count, 
                fill= factor(id), 
                color= id)) + # set lines surrounding each color to match the fill colors
       geom_bar(stat="identity", position="fill") + # stacked bars
-      facet_wrap(~site) +
+      facet_wrap(~substrate, scale = "free_x",
+                 labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
    
       labs(x = "Pool", # labels
            y="Relative Abundance",
@@ -174,9 +153,9 @@ cons_long %>% ggplot(aes(x= factor(pool_number),
       
       guides(color = "none") + # keep only legend for fill since fill and color are the same
       
-      scale_fill_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#aaffc3')) +
+      scale_fill_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#aaffc3', "#F8F8E1", "#7C4585")) +
       
-      scale_color_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#aaffc3'))
+      scale_color_manual(values = c('#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#aaffc3', "#F8F8E1", "#7C4585"))
 ```
 
-![](community_composition_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](community_composition_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
