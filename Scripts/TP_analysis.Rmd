@@ -2,7 +2,7 @@
 title: "TP_analysis"
 author: "Micaela Chapuis"
 date: "2025-06-30"
-output: html_document
+output: github_document
 ---
 
 ## Load Libraries
