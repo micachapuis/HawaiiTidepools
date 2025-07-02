@@ -98,8 +98,6 @@ library(ggeffects)
 library(sjPlot)
 ```
 
-    ## Install package "strengejacke" from GitHub (`devtools::install_github("strengejacke/strengejacke")`) to load all sj-packages at once!
-
 ## Load in Data
 
 ``` r
@@ -416,6 +414,49 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
 
 ![](TP_analysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
+### O2
+
+``` r
+data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+
+``` r
+data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+
+``` r
+data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
+    facet_wrap(~substrate) +
+  geom_smooth(method = "lm", se=FALSE) + 
+  geom_point() + 
+  theme_minimal() + 
+  labs(title = "DO")  +
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+
+``` r
+data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "lm", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time", y = "Dissolved Oxygen")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25)) 
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+
 ### Deltas
 
 ``` r
@@ -430,7 +471,7 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + #, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 ``` r
 delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, label = pool_number)) + 
@@ -444,7 +485,7 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 ### Delta TA vs Delta pH
 
@@ -463,7 +504,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 ``` r
 # committee meeting figure
@@ -480,4 +521,4 @@ delta_calc %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->

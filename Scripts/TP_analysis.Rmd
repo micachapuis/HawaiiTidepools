@@ -222,6 +222,36 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
 
+### O2
+```{r}
+data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+```{r}
+data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+```{r}
+data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
+    facet_wrap(~substrate) +
+  geom_smooth(method = "lm", se=FALSE) + 
+  geom_point() + 
+  theme_minimal() + 
+  labs(title = "DO")  +
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+```{r}
+data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "lm", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time", y = "Dissolved Oxygen")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25)) 
+```
+
 
 ### Deltas
 ```{r}
