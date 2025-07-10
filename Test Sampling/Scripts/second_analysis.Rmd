@@ -207,7 +207,10 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
   geom_point() + theme_bw() +
   labs(x = "Sample Time")  + 
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) 
+  theme(axis.text.x = element_text(size = 11, angle = 25),
+        axis.text.y = element_text(size = 11),
+        axis.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14)) 
 ```
 
 ```{r}
