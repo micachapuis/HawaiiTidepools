@@ -70,21 +70,26 @@ Salinity Normalize TA
 data <- data %>% mutate(TA_norm = TA*salinity_lab/35)
 ```
 
+Removing Kaihalulu Data collected on 2025/06/08 due to rain
+```{r}
+data <- data %>% filter(!date == "2025/06/08")
+```
+
 
 Calculate delta pH and delta TA
 ```{r}
 delta_calc <- data %>% 
-  select(date, site, pool_number, substrate, day_night, time_point, temp_pool, sample_time, pH, TA_norm)  %>%
+  select(date, site, pool_number, substrate, time_point, temp_pool, sample_time, pH, TA_norm)  %>%
   group_by(date, site, pool_number, substrate) %>%  # group by metadata
   arrange(time_point, .by_group = TRUE) %>%  # ensure correct order
   reframe(
-    delta_pH = pH[time_point = 3] - pH[time_point = 1],   # (Time 3 - Time 1)
+    delta_pH = pH[time_point == 3] - pH[time_point == 1],   # (Time 3 - Time 1)
     
-    delta_TA = (TA_norm[time_point = 3] - TA_norm[time_point = 1]),  # (Time 3 - Time 1)
+    delta_TA = (TA_norm[time_point == 3] - TA_norm[time_point == 1]),  # (Time 3 - Time 1)
 
-    delta_temp = (temp_pool[time_point = 3] - temp_pool[time_point = 1]),  # (Time 3 - Time 1)
+    delta_temp = (temp_pool[time_point == 3] - temp_pool[time_point == 1]),  # (Time 3 - Time 1)
 
-    delta_time = (as.numeric(difftime(sample_time[time_point = 3], sample_time[time_point = 1], units = "mins")))  # Time 3 - Time 1
+    delta_time = (as.numeric(difftime(sample_time[time_point == 3], sample_time[time_point == 1], units = "mins")))  # Time 3 - Time 1
     
   ) %>% 
     distinct(date, site, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
@@ -97,10 +102,12 @@ delta_calc <- delta_calc %>% mutate(delta_pH_norm = (delta_pH/delta_time)*60,
 ```
 
 
+
+
 ## Data Viz
 ```{r}
 # checking field salinity (with Orion) to lab salinity (with Orion) measurements
-plot(data$salinity_field, data$salinity_lab)
+plot(data$salinity_pool, data$salinity_lab)
 ```
 
 ### Pool Temperature
