@@ -98,6 +98,8 @@ library(ggeffects)
 library(sjPlot)
 ```
 
+    ## #refugeeswelcome
+
 ## Load in Data
 
 ``` r
@@ -105,6 +107,7 @@ chem <- read_csv(here("Data", "tidepool_chemistry.csv"))
 params <- read_csv(here("Data", "tidepool_parameters.csv"))
 pHSlope <- read_csv(here("Data", "pHSlope.csv"))
 TA <- read_csv(here("Data", "total_alkalinity.csv"))
+testdata <- read_csv(here("Test Sampling", "Data", "testdata.csv"))
 ```
 
 ## Data cleaning and joining
@@ -192,6 +195,12 @@ delta_calc <- delta_calc %>% mutate(delta_pH_norm = (delta_pH/delta_time)*60,
                                     delta_TA_norm = (delta_TA/delta_time)*60)
 ```
 
+Append test data
+
+``` r
+data <- bind_rows(data, testdata)
+```
+
 ## Data Viz
 
 ``` r
@@ -199,7 +208,7 @@ delta_calc <- delta_calc %>% mutate(delta_pH_norm = (delta_pH/delta_time)*60,
 plot(data$salinity_pool, data$salinity_lab)
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ### Pool Temperature
 
@@ -208,14 +217,14 @@ data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y =
   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature") + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +
   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature") + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
@@ -224,62 +233,10 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : span too small.  fewer data values than degrees of freedom.
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : pseudoinverse used at 4775.4
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : neighborhood radius 11245
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : reciprocal condition number 0
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : There are other near singularities as well. 3.4159e+07
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : Chernobyl! trL>n 5
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : Chernobyl! trL>n 5
-
-    ## Warning in sqrt(sum.squares/one.delta): NaNs produced
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : span too small.  fewer
-    ## data values than degrees of freedom.
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
-    ## 4775.4
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius
-    ## 11245
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
-    ## number 0
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : There are other near
-    ## singularities as well. 3.4159e+07
-
-    ## Warning in stats::qt(level/2 + 0.5, pred$df): NaNs produced
-
-    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
-    ## -Inf
-
-![](TP_analysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = temp_pool, color = substrate)) +
+data %>% ggplot(aes(x = sample_time, y = temp_pool, color = site)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam", se=FALSE) + 
@@ -291,11 +248,16 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Failed to fit group 3.
+    ## Warning: Failed to fit group 1.
+    ## Failed to fit group 1.
     ## Caused by error in `smooth.construct.cr.smooth.spec()`:
     ## ! x has insufficient unique values to support 10 knots: reduce k.
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+    ## Warning: Failed to fit group 2.
+    ## Caused by error in `smooth.construct.cr.smooth.spec()`:
+    ## ! x has insufficient unique values to support 10 knots: reduce k.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ### Pool Salinity
 
@@ -303,93 +265,52 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool, color = substrate)) +
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = salinity_pool, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (pool)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = salinity_pool, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (pool)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+    ## Warning: Removed 66 rows containing missing values or values outside the scale range
+    ## (`geom_line()`).
 
-``` r
-data %>% ggplot(aes(x = sample_time, y = salinity_pool)) +
-    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Pool)")  + theme(axis.text.x = element_text(angle = 30))
-```
-
-    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : span too small.  fewer data values than degrees of freedom.
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : pseudoinverse used at 4775.4
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : neighborhood radius 11245
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : reciprocal condition number 0
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : There are other near singularities as well. 3.4159e+07
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : Chernobyl! trL>n 5
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : Chernobyl! trL>n 5
-
-    ## Warning in sqrt(sum.squares/one.delta): NaNs produced
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : span too small.  fewer
-    ## data values than degrees of freedom.
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
-    ## 4775.4
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius
-    ## 11245
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
-    ## number 0
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : There are other near
-    ## singularities as well. 3.4159e+07
-
-    ## Warning in stats::qt(level/2 + 0.5, pred$df): NaNs produced
-
-    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
-    ## -Inf
+    ## Warning: Removed 66 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
 
 ![](TP_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = salinity_pool, color = substrate)) +
+data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Field)")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+``` r
+data %>% ggplot(aes(x = sample_time, y = salinity_field, color = site)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam", se=FALSE) + 
   geom_point() + theme_bw() +
-  labs(x = "Sample Time", y = "Pool Salinity")  + 
+  labs(x = "Sample Time", y = "Field Salinity")  + 
   guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Failed to fit group 3.
+    ## Warning: Failed to fit group 1.
+    ## Failed to fit group 1.
     ## Caused by error in `smooth.construct.cr.smooth.spec()`:
     ## ! x has insufficient unique values to support 10 knots: reduce k.
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+    ## Warning: Failed to fit group 2.
+    ## Caused by error in `smooth.construct.cr.smooth.spec()`:
+    ## ! x has insufficient unique values to support 10 knots: reduce k.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ### pH
 
@@ -398,31 +319,40 @@ data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y =
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = pH, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = pH_probe, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (probe)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = pH_probe, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (probe)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "pH")  + theme(axis.text.x = element_text(angle = 30))
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+
+``` r
+data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "pH")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
@@ -432,23 +362,16 @@ data %>% ggplot(aes(x = sample_time, y = pH)) +
     ## : span too small.  fewer data values than degrees of freedom.
 
     ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : pseudoinverse used at 4775.4
+    ## : pseudoinverse used at 4710.9
 
     ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : neighborhood radius 11245
+    ## : neighborhood radius 17489
 
     ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
     ## : reciprocal condition number 0
 
     ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : There are other near singularities as well. 3.4159e+07
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : Chernobyl! trL>n 5
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : Chernobyl! trL>n 5
-
-    ## Warning in sqrt(sum.squares/one.delta): NaNs produced
+    ## : There are other near singularities as well. 1.5949e+08
 
     ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
     ## else if (is.data.frame(newdata))
@@ -458,12 +381,12 @@ data %>% ggplot(aes(x = sample_time, y = pH)) +
     ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
     ## else if (is.data.frame(newdata))
     ## as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
-    ## 4775.4
+    ## 4710.9
 
     ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
     ## else if (is.data.frame(newdata))
     ## as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius
-    ## 11245
+    ## 17489
 
     ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
     ## else if (is.data.frame(newdata))
@@ -473,14 +396,12 @@ data %>% ggplot(aes(x = sample_time, y = pH)) +
     ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
     ## else if (is.data.frame(newdata))
     ## as.matrix(model.frame(delete.response(terms(object)), : There are other near
-    ## singularities as well. 3.4159e+07
-
-    ## Warning in stats::qt(level/2 + 0.5, pred$df): NaNs produced
+    ## singularities as well. 1.5949e+08
 
     ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
     ## -Inf
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
@@ -495,7 +416,7 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 ### TA
 
@@ -503,16 +424,16 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
+data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
     facet_wrap(~substrate) +
   geom_smooth(method = "lm", se=FALSE) + 
   geom_point() + 
@@ -523,7 +444,7 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
@@ -538,7 +459,7 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 ### O2
 
@@ -546,13 +467,19 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+    ## Warning: Removed 66 rows containing missing values or values outside the scale range
+    ## (`geom_line()`).
+
+    ## Warning: Removed 66 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
@@ -566,7 +493,13 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+    ## Warning: Removed 117 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 117 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = substrate)) +
@@ -581,7 +514,13 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+    ## Warning: Removed 117 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 117 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 ### Deltas
 
@@ -597,7 +536,7 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + #, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 ``` r
 delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, label = pool_number)) + 
@@ -611,7 +550,7 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
 ### Delta TA vs Delta pH
 
@@ -630,7 +569,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
 ``` r
 # committee meeting figure
@@ -647,4 +586,4 @@ delta_calc %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
