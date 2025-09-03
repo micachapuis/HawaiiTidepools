@@ -25,6 +25,7 @@ chem <- read_csv(here("Data", "tidepool_chemistry.csv"))
 params <- read_csv(here("Data", "tidepool_parameters.csv"))
 pHSlope <- read_csv(here("Data", "pHSlope.csv"))
 TA <- read_csv(here("Data", "total_alkalinity.csv"))
+testdata <- read_csv(here("Test Sampling", "Data", "testdata.csv"))
 ```
 
 
@@ -101,6 +102,10 @@ delta_calc <- delta_calc %>% mutate(delta_pH_norm = (delta_pH/delta_time)*60,
                                     delta_TA_norm = (delta_TA/delta_time)*60)
 ```
 
+Append test data 
+```{r}
+data <- bind_rows(data, testdata)
+```
 
 
 
@@ -126,7 +131,7 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
 ```
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = temp_pool, color = substrate)) +
+data %>% ggplot(aes(x = sample_time, y = temp_pool, color = site)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam", se=FALSE) + 
@@ -148,17 +153,17 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = sal
 
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = salinity_pool)) +
-    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Pool)")  + theme(axis.text.x = element_text(angle = 30))
+data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Field)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = salinity_pool, color = substrate)) +
+data %>% ggplot(aes(x = sample_time, y = salinity_field, color = site)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam", se=FALSE) + 
   geom_point() + theme_bw() +
-  labs(x = "Sample Time", y = "Pool Salinity")  + 
+  labs(x = "Sample Time", y = "Field Salinity")  + 
   guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
@@ -187,6 +192,12 @@ data %>% ggplot(aes(x = sample_time, y = pH)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "pH")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
+
+```{r}
+data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
+    facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "pH")  + theme(axis.text.x = element_text(angle = 30))
+```
+
 ```{r}
 data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
     facet_wrap(~substrate, 
@@ -209,7 +220,7 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = TA_
 ```
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
+data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
     facet_wrap(~substrate) +
   geom_smooth(method = "lm", se=FALSE) + 
   geom_point() + 
