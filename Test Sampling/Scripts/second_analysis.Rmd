@@ -73,6 +73,11 @@ Salinity Normalize TA
 data <- data %>% mutate(TA_norm = TA*salinity_lab/35)
 ```
 
+```{r}
+write.csv(data, here("Test Sampling", "Data", "testdata.csv"))
+```
+
+
 Rounding sample time
 ```{r}
 data <- data %>% mutate(round_time = round_hms(sample_time, "hour"),

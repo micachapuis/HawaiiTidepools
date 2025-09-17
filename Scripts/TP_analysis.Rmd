@@ -6,7 +6,7 @@ output: github_document
 ---
 
 ## Load Libraries
-```{r}
+```{r, message = FALSE}
 library(tidyverse)
 library(here)
 library(seacarb)
@@ -27,6 +27,9 @@ pHSlope <- read_csv(here("Data", "pHSlope.csv"))
 TA <- read_csv(here("Data", "total_alkalinity.csv"))
 testdata <- read_csv(here("Test Sampling", "Data", "testdata.csv"))
 ```
+
+
+
 
 
 ## Data cleaning and joining
@@ -76,6 +79,10 @@ Removing Kaihalulu Data collected on 2025/06/08 due to rain
 data <- data %>% filter(!date == "2025/06/08")
 ```
 
+Append test data 
+```{r}
+data <- bind_rows(data, testdata)
+```
 
 Calculate delta pH and delta TA
 ```{r}
@@ -102,10 +109,7 @@ delta_calc <- delta_calc %>% mutate(delta_pH_norm = (delta_pH/delta_time)*60,
                                     delta_TA_norm = (delta_TA/delta_time)*60)
 ```
 
-Append test data 
-```{r}
-data <- bind_rows(data, testdata)
-```
+
 
 
 
@@ -137,7 +141,7 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool, color = site)) +
   geom_smooth(method = "gam", se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Temperature (°C)")  + 
-  guides(color = "none") +
+  #guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
 
@@ -164,7 +168,7 @@ data %>% ggplot(aes(x = sample_time, y = salinity_field, color = site)) +
   geom_smooth(method = "gam", se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Field Salinity")  + 
-  guides(color = "none") +
+  #guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
 
@@ -199,13 +203,13 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
 ```
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
+data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "lm", se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time")  + 
-  guides(color = "none") +
+  #guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
 
@@ -222,7 +226,7 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = TA_
 ```{r}
 data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
     facet_wrap(~substrate) +
-  geom_smooth(method = "lm", se=FALSE) + 
+  geom_smooth() + 
   geom_point() + 
   theme_minimal() + 
   labs(title = "TA Norm")  +
@@ -236,6 +240,17 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
   geom_smooth(method = "lm", se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Total Alkalinity")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25)) 
+```
+Non-normalized salinity
+```{r}
+data %>% ggplot(aes(x = sample_time, y = TA, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "lm", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time", y = "Total Alkalinity Regular")  + 
   guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
@@ -260,7 +275,7 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
 ```
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = substrate)) +
+data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = site)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "lm", se=FALSE) + 
@@ -301,8 +316,8 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, 
 # committee meeting figure
 data %>% 
   filter(!substrate %in% "ocean") %>% 
-  ggplot(aes(x = pH, y = TA_norm)) + 
-  geom_point() + 
+  ggplot(aes(x = pH, y = TA_norm, color = factor(date), shape = day_night)) + 
+  geom_point(size = 2, alpha = 0.7) + 
   geom_smooth(method = "lm") + 
   facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
@@ -320,4 +335,44 @@ delta_calc %>%
   geom_smooth(method = "lm") + 
   theme_bw() + 
   labs(x = "Delta pH/Hour", y = "Delta TA/Hour") 
+```
+
+-----
+Pool 1 salinity lab vs TA reg
+```{r}
+data %>% 
+  filter(!substrate %in% c("ocean", "basalt")) %>% 
+  filter(pool_number == 1) %>%
+  ggplot(aes(x = salinity_pool, y = TA)) + 
+  geom_point(size = 2, alpha = 0.7) + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  theme_bw() + 
+  labs(x = "Pool Salinity", y = "Reg Total Alkalinity") 
+```
+
+Salinity vs temp
+```{r}
+data %>% 
+  ggplot(aes(x = temp_field, y = salinity_field)) + 
+  geom_point(size = 2, alpha = 0.7) + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~substrate, scales = "free_x",
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  theme_bw() + 
+  labs(x = "Temperature", y = "Field Salinity") 
+```
+
+DO and pH
+```{r}
+data %>% 
+  #filter(!substrate %in% c("ocean")) %>% 
+  ggplot(aes(x = pH, y = dissolved_oxygen)) + 
+  geom_point(size = 2, alpha = 0.7) + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  theme_bw() + 
+  labs(x = "pH", y = "Dissolved Oxygen") 
 ```

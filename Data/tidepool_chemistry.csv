@@ -95,7 +95,7 @@ date,site,pool_number,day_night,time_point,sample_ID,tide_ft,sample_time,temp_po
 2025/06/22,Sandy Beach,29,day,3,20250622_sb_p29_t3,-0.3,6:25,23.6,38.0,7:14,25.396,7.92,-49.4,36.39,4.27,NA,37.65,"Mica, Mj, Josh",
 2025/06/22,Sandy Beach,30,day,3,20250622_sb_p30_t3,-0.2,6:35,23.3,40.0,7:18,25.408,8.31,-71.8,38.56,4.90,NA,39.73,"Mica, Mj, Josh","time written on datasheet for sample was 6:45, but might be wrong since p27 was at 6:32. Changed it to 6:35"
 2025/06/22,Sandy Beach,ocean,day,3,20250622_sb_ocn_t3,-0.3,6:03,25.0,35.3,6:31,25.537,7.94,-50.2,34.27,6.84,NA,35.53,"Mica, Mj, Josh",taken near p20
-2025/07/20,Kaihalulu Beach,15,night,1,20250720_kb_p15_t1,0,0:48,24.1,34.9,12:56,24.601,7.99,-53.5,35.47,5.27,64.3,35.20,"Mica, Mj, Josh",
+2025/07/20,Kaihalulu Beach,15,night,1,20250720_kb_p15_t1,0,0:48,24.1,34.9,0:56,24.601,7.99,-53.5,35.47,5.27,64.3,35.20,"Mica, Mj, Josh",
 2025/07/20,Kaihalulu Beach,13,night,1,20250720_kb_p13_t1,0,0:50,24.3,35.0,1:01,24.691,7.90,-48.1,35.46,5.70,69.7,35.15,"Mica, Mj, Josh",
 2025/07/20,Kaihalulu Beach,14,night,1,20250720_kb_p14_t1,0,0:53,24.8,34.9,1:07,25.019,7.75,-39.8,35.38,5.96,73.1,34.94,"Mica, Mj, Josh",ocean very close but no inflow at 12:53
 2025/07/20,Kaihalulu Beach,12,night,1,20250720_kb_p12_t1,0,0:56,24.2,35.0,1:14,24.722,7.75,-39.5,35.49,6.30,77.2,35.08,"Mica, Mj, Josh",ocean very close but no inflow at 12:56

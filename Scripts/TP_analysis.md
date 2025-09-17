@@ -7,98 +7,16 @@ Micaela Chapuis
 
 ``` r
 library(tidyverse)
-```
-
-    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ dplyr     1.1.4     ✔ readr     2.1.5
-    ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
-    ## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-    ## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-    ## ✔ purrr     1.0.2     
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
-
-``` r
 library(here)
-```
-
-    ## here() starts at /Users/micachapuis/GitHub/HawaiiTidepools
-
-``` r
 library(seacarb)
-```
-
-    ## Loading required package: oce
-    ## Loading required package: gsw
-    ## Loading required package: SolveSAPHE
-
-``` r
 library(lubridate)
 library(car)
-```
-
-    ## Loading required package: carData
-    ## 
-    ## Attaching package: 'car'
-    ## 
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     recode
-    ## 
-    ## The following object is masked from 'package:purrr':
-    ## 
-    ##     some
-
-``` r
 library(lubridateExtras)
-```
-
-    ## 
-    ## Attaching package: 'lubridateExtras'
-    ## 
-    ## The following object is masked from 'package:lubridate':
-    ## 
-    ##     hms
-
-``` r
 library(lme4)
-```
-
-    ## Loading required package: Matrix
-    ## 
-    ## Attaching package: 'Matrix'
-    ## 
-    ## The following objects are masked from 'package:tidyr':
-    ## 
-    ##     expand, pack, unpack
-
-``` r
 library(scales)
-```
-
-    ## 
-    ## Attaching package: 'scales'
-    ## 
-    ## The following object is masked from 'package:oce':
-    ## 
-    ##     rescale
-    ## 
-    ## The following object is masked from 'package:purrr':
-    ## 
-    ##     discard
-    ## 
-    ## The following object is masked from 'package:readr':
-    ## 
-    ##     col_factor
-
-``` r
 library(ggeffects)
 library(sjPlot)
 ```
-
-    ## #refugeeswelcome
 
 ## Load in Data
 
@@ -168,6 +86,12 @@ Removing Kaihalulu Data collected on 2025/06/08 due to rain
 data <- data %>% filter(!date == "2025/06/08")
 ```
 
+Append test data
+
+``` r
+data <- bind_rows(data, testdata)
+```
+
 Calculate delta pH and delta TA
 
 ``` r
@@ -193,12 +117,6 @@ Normalize delta pH and TA to by hour
 ``` r
 delta_calc <- delta_calc %>% mutate(delta_pH_norm = (delta_pH/delta_time)*60,
                                     delta_TA_norm = (delta_TA/delta_time)*60)
-```
-
-Append test data
-
-``` r
-data <- bind_rows(data, testdata)
 ```
 
 ## Data Viz
@@ -242,7 +160,7 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool, color = site)) +
   geom_smooth(method = "gam", se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Temperature (°C)")  + 
-  guides(color = "none") +
+  #guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
 
@@ -295,7 +213,7 @@ data %>% ggplot(aes(x = sample_time, y = salinity_field, color = site)) +
   geom_smooth(method = "gam", se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Field Salinity")  + 
-  guides(color = "none") +
+  #guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
 
@@ -404,13 +322,13 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
 ![](TP_analysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
+data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "lm", se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time")  + 
-  guides(color = "none") +
+  #guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
 
@@ -435,14 +353,57 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = TA_
 ``` r
 data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
     facet_wrap(~substrate) +
-  geom_smooth(method = "lm", se=FALSE) + 
+  geom_smooth() + 
   geom_point() + 
   theme_minimal() + 
   labs(title = "TA Norm")  +
   theme(axis.text.x = element_text(angle = 30))
 ```
 
-    ## `geom_smooth()` using formula = 'y ~ x'
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : span too small.  fewer data values than degrees of freedom.
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at 4710.9
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 17489
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 0
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : There are other near singularities as well. 1.5949e+08
+
+    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+    ## else if (is.data.frame(newdata))
+    ## as.matrix(model.frame(delete.response(terms(object)), : span too small.  fewer
+    ## data values than degrees of freedom.
+
+    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+    ## else if (is.data.frame(newdata))
+    ## as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
+    ## 4710.9
+
+    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+    ## else if (is.data.frame(newdata))
+    ## as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius
+    ## 17489
+
+    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+    ## else if (is.data.frame(newdata))
+    ## as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
+    ## number 0
+
+    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
+    ## else if (is.data.frame(newdata))
+    ## as.matrix(model.frame(delete.response(terms(object)), : There are other near
+    ## singularities as well. 1.5949e+08
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
 
 ![](TP_analysis_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
@@ -460,6 +421,22 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
     ## `geom_smooth()` using formula = 'y ~ x'
 
 ![](TP_analysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+Non-normalized salinity
+
+``` r
+data %>% ggplot(aes(x = sample_time, y = TA, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "lm", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time", y = "Total Alkalinity Regular")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25)) 
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ### O2
 
@@ -467,7 +444,7 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
@@ -479,7 +456,7 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = dis
     ## Warning: Removed 66 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
@@ -499,10 +476,10 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
     ## Warning: Removed 117 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = substrate)) +
+data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = site)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "lm", se=FALSE) + 
@@ -520,7 +497,7 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = substrate)) +
     ## Warning: Removed 117 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 ### Deltas
 
@@ -536,7 +513,7 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + #, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
 ``` r
 delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, label = pool_number)) + 
@@ -550,7 +527,7 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
 ### Delta TA vs Delta pH
 
@@ -558,8 +535,8 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, 
 # committee meeting figure
 data %>% 
   filter(!substrate %in% "ocean") %>% 
-  ggplot(aes(x = pH, y = TA_norm)) + 
-  geom_point() + 
+  ggplot(aes(x = pH, y = TA_norm, color = factor(date), shape = day_night)) + 
+  geom_point(size = 2, alpha = 0.7) + 
   geom_smooth(method = "lm") + 
   facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
@@ -569,7 +546,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
 
 ``` r
 # committee meeting figure
@@ -586,4 +563,66 @@ delta_calc %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+
+------------------------------------------------------------------------
+
+Pool 1 salinity lab vs TA reg
+
+``` r
+data %>% 
+  filter(!substrate %in% c("ocean", "basalt")) %>% 
+  filter(pool_number == 1) %>%
+  ggplot(aes(x = salinity_pool, y = TA)) + 
+  geom_point(size = 2, alpha = 0.7) + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  theme_bw() + 
+  labs(x = "Pool Salinity", y = "Reg Total Alkalinity") 
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
+
+Salinity vs temp
+
+``` r
+data %>% 
+  ggplot(aes(x = temp_field, y = salinity_field)) + 
+  geom_point(size = 2, alpha = 0.7) + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~substrate, scales = "free_x",
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  theme_bw() + 
+  labs(x = "Temperature", y = "Field Salinity") 
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+
+DO and pH
+
+``` r
+data %>% 
+  #filter(!substrate %in% c("ocean")) %>% 
+  ggplot(aes(x = pH, y = dissolved_oxygen)) + 
+  geom_point(size = 2, alpha = 0.7) + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  theme_bw() + 
+  labs(x = "pH", y = "Dissolved Oxygen") 
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+    ## Warning: Removed 117 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 117 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-45-1.png)<!-- -->

@@ -98,6 +98,7 @@ delta_calc <- data %>%
 ```
 
 
+
 Doing it for just two timepoints for now (T1-T2)
 ```{r} 
 delta_calc2 <- data %>% 
