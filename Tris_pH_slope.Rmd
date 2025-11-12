@@ -42,7 +42,7 @@ pHSlope <- pHcalib %>%
   
            #drop_na() %>%       # Mica: commented out because I have a lot of NAs in data and this drops all no matter the column, will eventually use this again
   
-            mutate(pH = pH(Ex=mV,Etris=mVTris,S=salinity_lab,T=temp_field)) %>% # calculate pH of the samples using the pH seacarb function
+            mutate(pH = pH(Ex=mV,Etris=mVTris,S=salinity_pool,T=temp_field)) %>% # calculate pH of the samples using the pH seacarb function
   
   #mutate(pH_insitu = pHinsi(pH = pH, ALK = TA_Raw, Tinsi = TempInSitu, Tlab = Temp, S = Salinity_lab_Silbiger)) %>%
   # Mica: this was already commented out 
