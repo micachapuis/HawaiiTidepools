@@ -212,33 +212,36 @@ data <- data %>% mutate(pool_volume = (mean_volume - vol_removed_l)*0.001) # fro
 ```
 
 
-### Calculate Deltas
+Old Calculate Deltas
 Calculate delta pH, delta TA, delta DIC, delta temp, delta time
 ```{r}
-delta_calc <- data %>% 
-  select(date, site, pool_number, substrate, time_point, temp_pool, sample_time, pH, TA_norm, DIC_norm)  %>%
-  group_by(date, site, pool_number, substrate) %>%  # group by metadata
-  arrange(time_point, .by_group = TRUE) %>%  # ensure correct order
-  reframe(
-    delta_pH = pH[time_point == 3] - pH[time_point == 1],   # (Time 3 - Time 1)
+#delta_calc <- data %>% 
+ # select(date, site, pool_number, substrate, time_point, temp_pool, sample_time, pH, TA_norm, DIC_norm, dissolved_oxygen)  %>%
+  #group_by(date, site, pool_number, substrate) %>%  # group by metadata
+  #arrange(time_point, .by_group = TRUE) %>%  # ensure correct order
+  #reframe(
+  #  delta_pH = pH[time_point == 3] - pH[time_point == 1],   # (Time 3 - Time 1)
     
-    delta_TA = (TA_norm[time_point == 3] - TA_norm[time_point == 1]),  # (Time 3 - Time 1)
+  #  delta_TA = (TA_norm[time_point == 3] - TA_norm[time_point == 1]),  # (Time 3 - Time 1)
     
-    delta_DIC = (DIC_norm[time_point == 3] - DIC_norm[time_point == 1]), # (Time 3 - Time 1)
+  #  delta_DIC = (DIC_norm[time_point == 3] - DIC_norm[time_point == 1]), # (Time 3 - Time 1)
 
-    delta_temp = (temp_pool[time_point == 3] - temp_pool[time_point == 1]),  # (Time 3 - Time 1)
+  #  delta_temp = (temp_pool[time_point == 3] - temp_pool[time_point == 1]),  # (Time 3 - Time 1)
 
-    delta_time = (as.numeric(difftime(sample_time[time_point == 3], sample_time[time_point == 1], units = "mins")))  # Time 3 - Time 1
+  #  delta_time = (as.numeric(difftime(sample_time[time_point == 3], sample_time[time_point == 1], units = "mins"))),  # Time 3 - Time 1
     
-  ) %>% 
-    distinct(date, site, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+  #  delta_oxygen = (dissolved_oxygen[time_point == 3] - dissolved_oxygen[time_point == 1])
+    
+#  ) %>% 
+#    distinct(date, site, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
 ```
 
 Normalize delta pH, TA, and DIC to by hour
 ```{r}
-delta_calc <- delta_calc %>% mutate(delta_pH_norm = (delta_pH/delta_time)*60,
-                                    delta_TA_norm = (delta_TA/delta_time)*60,
-                                    delta_DIC_norm = (delta_DIC/delta_time)*60)
+#delta_calc <- delta_calc %>% mutate(delta_pH_norm = (delta_pH/delta_time)*60,
+#                                    delta_TA_norm = (delta_TA/delta_time)*60,
+#                                    delta_DIC_norm = (delta_DIC/delta_time)*60,
+#                                    delta_O2_norm = (delta_oxygen/delta_time)*60)
 ```
 
 ### Wind Speed
@@ -308,11 +311,11 @@ Calculate Delta TA and Delta DIC between two consecutive timepoints
 #      names_to = c(".value", "interval"), # interval will be 1 or 2 (1 is from T1 to T2 and 2 is from T2 to T3), .value takes the name of whichever value we get the delta for
 #      names_pattern = "(.*?)([12])$") # this renames all the columns to remove the 1s or 2s
 ```
-
+### Calculate Deltas
 ```{r}
 deltas <- data %>%
   
-  select(date, site, pool_number, substrate, surface_area_m2, mean_wind_speed, pool_volume, time_point, sample_time, temp_pool, pH, TA_norm, DIC_norm, FCO2) %>%
+  select(date, site, pool_number, substrate, surface_area_m2, mean_wind_speed, pool_volume, time_point, sample_time, temp_pool, pH, TA_norm, DIC_norm, FCO2, dissolved_oxygen, OmegaAragonite) %>%
   
   group_by(date, site, pool_number, substrate, surface_area_m2) %>%
   
@@ -320,7 +323,7 @@ deltas <- data %>%
   
   pivot_wider(
     names_from = time_point,
-    values_from = c(pH, TA_norm, DIC_norm, temp_pool, sample_time, pool_volume, FCO2),
+    values_from = c(pH, TA_norm, DIC_norm, temp_pool, sample_time, pool_volume, FCO2, dissolved_oxygen, OmegaAragonite),
     names_glue = "{.value}{time_point}") %>%
   
   mutate(
@@ -334,8 +337,12 @@ deltas <- data %>%
     delta_DIC2 = DIC_norm3 - DIC_norm2,
     delta_temp1 = temp_pool2 - temp_pool1, # change in temperature between two sampling points 
     delta_temp2 = temp_pool3 - temp_pool2,
+    delta_oxygen1 = dissolved_oxygen2 - dissolved_oxygen1,
+    delta_oxygen2 = dissolved_oxygen3 - dissolved_oxygen2,
     delta_time1 = as.numeric(difftime(sample_time2, sample_time1, units = "hours")), # time between two sampling points
     delta_time2 = as.numeric(difftime(sample_time3, sample_time2, units = "hours")),
+    delta_aragonite1 = OmegaAragonite2 - OmegaAragonite1,
+    delta_aragonite2 = OmegaAragonite3 - OmegaAragonite2,
     mean_FCO21 = mean(FCO22, FCO21, na.rm = TRUE), # calculate the average FCO2 between two sampling points
     mean_FCO22 = mean(FCO23, FCO22, na.rm = TRUE),
     mean_vol1 = rowMeans(cbind(pool_volume1, pool_volume2), na.rm = TRUE), # average volume between two sampling points
@@ -345,9 +352,18 @@ deltas <- data %>%
       cols = matches("delta_|mean_"), # finds every column that stars with either "delta_" or "vol_avg"
       names_to = c(".value", "interval"), # interval will be 1 or 2 (1 is from T1 to T2 and 2 is from T2 to T3), .value takes the name of whichever value we get the delta for
       names_pattern = "(.*?)([12])$") %>%  # this renames all the columns to remove the 1s or 2s
-  select(!(pH1:FCO23))
+  select(!(pH1:OmegaAragonite3)) %>%
+  filter(!is.na(interval))
 ```
 
+
+Normalize delta pH, TA, and DIC to by hour
+```{r}
+deltas <- deltas %>% mutate(delta_pH_norm = (delta_pH/delta_time),
+                            delta_TA_norm = (delta_TA/delta_time),
+                            delta_DIC_norm = (delta_DIC/delta_time),
+                            delta_O2_norm = (delta_oxygen/delta_time))
+```
 
 Calculate NEC
 ```{r}
@@ -506,7 +522,28 @@ line_time <- as.numeric(hms::as_hms("18:00:00"))
 line_shift <- (line_time - start) %% (24 * 60 * 60)
 ```
 
+#### pH (not temperature normalized)
 ```{r}
+data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
+  geom_point() + 
+  theme_bw() +
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  labs(x = "Sample Time") +
+   scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+  )
+```
+#### pH (Temperature Normalized)
+```{r}
+# temp normalize: pH*temp_pool/25.2
 data %>% ggplot(aes(x = time_shift, y = pH*temp_pool/25.2, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
@@ -524,7 +561,6 @@ data %>% ggplot(aes(x = time_shift, y = pH*temp_pool/25.2, color = substrate)) +
     labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
   )
 ```
-
 
 ```{r}
 data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
@@ -575,7 +611,7 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
   labs(title = "TA Norm")  +
   theme(axis.text.x = element_text(angle = 30))
 ```
-
+#### TA (Salinity Normalized)
 ```{r}
 data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
     facet_wrap(~substrate, 
@@ -586,9 +622,10 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
   guides(color = "none") +
   theme(axis.text.x = element_text(angle = 25)) 
 ```
-
+#### TA (not salinity normalized)
 ```{r}
-data %>% ggplot(aes(x = time_shift, y = TA_norm, color = substrate)) +
+# for TA over time plot use raw data, not normalized
+data %>% ggplot(aes(x = time_shift, y = TA, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
@@ -610,12 +647,12 @@ data %>% ggplot(aes(x = time_shift, y = TA_norm, color = substrate)) +
 
 
 
-Non-normalized salinity
+TA Not normalized to salinity
 ```{r}
 data %>% ggplot(aes(x = sample_time, y = TA, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
-  geom_smooth(method = "lm", se=FALSE) + 
+  geom_smooth() + #method = "lm", se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Total Alkalinity Regular")  + 
   guides(color = "none") +
@@ -655,7 +692,7 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = site)) +
 
 ### Deltas
 ```{r}
-delta_calc %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + #, label = pool_number)) + 
+deltas %>% ggplot(aes(x = substrate, y = delta_pH_norm, color = substrate)) + #, label = pool_number)) + 
   geom_boxplot(alpha = 0.7) + 
   geom_point() + 
  # geom_text(hjust=0, vjust=0) +
@@ -667,7 +704,7 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_pH, color = substrate)) + #, 
 ```
 
 ```{r}
-delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, label = pool_number)) + 
+deltas %>% ggplot(aes(x = substrate, y = delta_TA_norm, color = substrate)) + #, label = pool_number)) + 
   geom_boxplot(alpha = 0.7) + 
   geom_point() + 
  # geom_text(hjust=0, vjust=0) +
@@ -681,11 +718,12 @@ delta_calc %>% ggplot(aes(x = substrate, y = delta_TA, color = substrate)) + #, 
 ### Delta TA vs Delta pH
 
 ```{r}
-delta_calc %>% 
+# not time normalized
+deltas %>% 
   ggplot(aes(x = delta_pH, y = delta_TA)) + 
   geom_point(size = 2, alpha = 0.7) + 
   geom_smooth(method = "lm", color = "sienna3") + 
-  facet_wrap(~substrate, nrow = 3,
+  facet_wrap(~substrate,
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
   theme_bw() + 
   labs(x = expression(paste(Delta, " pH")), 
@@ -700,9 +738,9 @@ delta_calc %>%
 
 #ggsave(here("Output", "delta_TA_vs_delta_pH.png"), width = 4, height = 8)
 ```
-
+#### Delta pH vs Delta TA (time normalized)
 ```{r}
-delta_calc %>% 
+deltas %>% 
   filter(!substrate %in% "ocean") %>%
   ggplot(aes(x = delta_pH_norm, y = delta_TA_norm, color = substrate)) + 
   geom_point(size = 2, alpha = 0.7) + 
@@ -744,7 +782,7 @@ data %>%
 ```
 ```{r}
 # committee meeting figure
-delta_calc %>% 
+deltas %>% 
   filter(substrate == "limestone" | substrate == "basalt") %>%
   ggplot(aes(x = delta_pH_norm, y = delta_TA_norm)) + 
   facet_wrap(~substrate, 
@@ -755,11 +793,11 @@ delta_calc %>%
   labs(x = "Delta pH/Hour", y = "Delta TA/Hour") 
 ```
 
-### Delta DIC vs Delta pH
+#### Delta DIC vs Delta pH (Time Normalized)
 ```{r}
-delta_calc %>% 
+deltas %>% 
   filter(!substrate %in% "ocean") %>%
-  ggplot(aes(x = delta_DIC, y = delta_pH, color = substrate)) + 
+  ggplot(aes(x = delta_DIC_norm, y = delta_pH_norm, color = substrate)) + 
   geom_point(size = 2, alpha = 0.7) + 
   geom_smooth(method = "lm", aes(fill = substrate)) +#, color = "palegreen4") + 
   #facet_wrap(~substrate, nrow = 3,
@@ -822,6 +860,55 @@ data %>%
   labs(x = "pH", y = "Dissolved Oxygen") 
 ```
 
+#### Delta pH vs Delta O2 (Time Normalized)
+```{r}
+deltas %>% 
+  filter(!substrate %in% "ocean") %>%
+  ggplot(aes(x = delta_pH_norm, y = delta_O2_norm, color = substrate)) + 
+  geom_point(size = 2, alpha = 0.7) + 
+  geom_smooth(method = "lm", aes(fill = substrate)) + 
+  facet_wrap(~substrate,
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  theme_bw() + 
+  labs(x = expression(paste(Delta, " pH")), 
+       y = expression(paste(Delta, " Dissolved Oxygen")),
+       color = "Substrate") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  theme(strip.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 13),
+        legend.position = "bottom",
+        legend.text=element_text(size=16),
+        legend.title = element_text(size = 16)
+        ) +
+  scale_colour_manual(labels = c("Basalt", "Limestone"), values = c("#5EABD6", "#e75b4a")) +
+  scale_fill_manual(values = c("#5EABD6", "#e75b4a")) + 
+  guides(fill="none", color = "none")
+```
+
+```{r}
+# Time normalized delta ph vs delta o2
+deltas %>% 
+  filter(!substrate %in% "ocean") %>%
+  ggplot(aes(x = delta_pH_norm, y = delta_O2_norm)) + 
+  geom_point(size = 2, alpha = 0.7) + 
+  geom_smooth(method = "lm") + 
+  #facet_wrap(~substrate, nrow = 3,
+ #              labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  theme_bw() + 
+  labs(x = expression(paste(Delta, " pH")), 
+       y = expression(paste(Delta, " Dissolved Oxygen"))) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  theme(strip.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 13),
+        legend.position = "bottom",
+        legend.text=element_text(size=16),
+        legend.title = element_text(size = 16)
+        ) 
+```
 
 ### TA/DIC Plot
 ```{r}
@@ -926,6 +1013,34 @@ deltas %>% ggplot(aes(x = NEP, y = NEC, color = substrate)) +
   labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
        y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
 ```
+
+### Aragonite Saturation State
+
+```{r}
+deltas %>% ggplot(aes(x = delta_pH, y = delta_aragonite)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") +
+  #facet_wrap(~substrate) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+
+  theme_bw()
+```
+
+
+```{r}
+deltas %>% ggplot(aes(x = delta_aragonite, y = NEC)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") +
+  #facet_wrap(~substrate) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  theme_bw() +
+  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+```
+
+
+
 
 ### fDOM
 ```{r}

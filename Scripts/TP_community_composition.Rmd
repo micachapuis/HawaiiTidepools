@@ -146,6 +146,16 @@ benthic_producers <- benthic_categories %>%
                              distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
 ```
 
+```{r}
+benthic_prod_wide <- benthic_producers %>%
+  select(!cat_percent_cover) %>%
+  pivot_wider(
+    names_from = production,
+    values_from = prod_percent_cover) %>%
+  rename("producer_pcover" = "producer",
+         "non_producer_pcover" = "non-producer")
+```
+
 
 ```{r}
 benthic_categories %>% 
@@ -175,6 +185,17 @@ benthic_calcifiers <- benthic_categories %>%
                              distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
 ```
 
+```{r}
+benthic_calc_wide <- benthic_calcifiers %>%
+  select(!cat_percent_cover) %>%
+  pivot_wider(
+    names_from = calcification,
+    values_from = calc_percent_cover) %>%
+  rename("calcifying_pcover" = "calcifying",
+         "non_calcifying_pcover" = "non-calcifying")
+```
+
+
 
 ```{r}
 benthic_categories %>% 
@@ -193,7 +214,6 @@ benthic_categories %>%
       guides(color = "none")  + # keep only legend for fill since fill and color are the same
       theme_minimal() 
 ```
-
 
 ## Mobile
 Join with tidepool parameters to get surface area of each pool
@@ -230,6 +250,48 @@ mobile_categories_density <- mobile_categories %>%
                              distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
 ```
 
+Mobile Calcifiers
+```{r}
+mobile_calcifiers <- mobile_categories %>%
+                        mutate(density = (count/surface_area_m2)) %>%
+                        select(-c(count, id, surface_area_m2, category, category_name, production)) %>%
+                        group_by(date, site, water_date, pool_number, substrate, calcification) %>%
+                        mutate(calc_density = sum(density)) %>%
+                       distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+```
+
+```{r}
+mobile_calc_wide <- mobile_calcifiers %>%
+  select(!density) %>%
+  pivot_wider(
+    names_from = calcification,
+    values_from = calc_density) %>%
+  rename("calcifying_density" = "calcifying",
+         "non_calcifying_density" = "non-calcifying")
+```
+
+Mobile Producers 
+```{r}
+mobile_producers <- mobile_categories %>%
+                      mutate(density = (count/surface_area_m2)) %>%
+                      select(-c(count, id, surface_area_m2, category, category_name, calcification)) %>%
+                      group_by(date, site, water_date, pool_number, substrate, production) %>%
+                      mutate(prod_density = sum(density)) %>%
+                      distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+```
+
+```{r}
+mobile_prod_wide <- mobile_producers %>%
+  select(!density) %>%
+  pivot_wider(
+    names_from = production,
+    values_from = prod_density) %>%
+  rename("producer_density" = "producer",
+         "non_producer_density" = "non-producer")
+```
+
+
+
 ```{r}
 mobile_categories_density %>% 
   filter(!pool_number %in% c(27,30)) %>%
@@ -241,3 +303,14 @@ mobile_categories_density %>%
   facet_grid(month~substrate, scale = "free_x") 
 ```
 
+
+Community Composition Summary (Producer and Calcifier percent cover and density by pool)
+```{r}
+comm_comp_summary <- list(benthic_prod_wide, benthic_calc_wide, mobile_prod_wide, mobile_calc_wide) %>% reduce(left_join)
+
+comm_comp_summary <- as.data.frame(comm_comp_summary) %>%
+                        select(-date) %>%
+                        rename("date" = "water_date")
+
+write.csv(comm_comp_summary, here("Data", "comm_comp_summary.csv"))
+```
