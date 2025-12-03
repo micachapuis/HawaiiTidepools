@@ -18,6 +18,7 @@ library(lme4)
 library(scales)
 library(ggeffects)
 library(sjPlot)
+library(broom)
 ```
 
 ## Load in Data
@@ -28,6 +29,10 @@ pHSlope <- read_csv(here("Data", "pHSlope.csv"))
 TA <- read_csv(here("Data", "total_alkalinity.csv"))
 testdata <- read_csv(here("Test Sampling", "Data", "testdata.csv"))
 pool_volumes <- read_csv(here("Data", "pool_volumes.csv"))
+fdom <- read_csv(here("Data", "fDOM_indices.csv"))
+
+community_comp <- read_csv(here("Data", "comm_comp_summary.csv"))
+
 kb_wind <- read_csv(here("Data", "Climate", "KB_0551_20250101_20251108.csv"))
 sb_wind <- read_csv(here("Data", "Climate", "SB_0531_20250101_20251108.csv"))
 ```
@@ -116,6 +121,36 @@ Removing Kaihalulu Data collected on 2025/06/08 due to rain
 data <- data %>% filter(!date == "2025/06/08")
 ```
 
+Join Community Comp Summary Data 
+```{r}
+# make pool number a factor in the community comp data first
+community_comp$pool_number <- factor(community_comp$pool_number)
+
+# then join
+data <- left_join(data, community_comp, by = c("pool_number", "date", "site", "substrate"))
+```
+
+
+### fDOM Cleaning
+```{r}
+fdom <- fdom %>% select(!(c("sample", "run_name", "UniqueID"))) %>%
+  mutate(m_to_c = CobleM/CobleC) %>% # looks like it was calculated backwards
+  rename("ultra_violet_humic_like" = "CobleA",
+         "visible_humic_like" = "CobleC",
+         "marine_humic_like" = "CobleM",
+         "tryptophan_like" = "CobleT",
+         "tyrosine_like" = "CobleB",
+         "phenylalanine_like" = "Fpeak") %>%
+  mutate(humics = ultra_violet_humic_like + visible_humic_like + marine_humic_like, # sum of all humic-like
+         prot = tryptophan_like + tyrosine_like + phenylalanine_like) # sum of all protienaceous-like
+```
+
+```{r}
+data <- left_join(data, fdom)
+```
+
+
+
 Append test data 
 ```{r}
 data <- bind_rows(data, testdata)
@@ -177,6 +212,7 @@ data <- data %>% mutate(pool_volume = (mean_volume - vol_removed_l)*0.001) # fro
 ```
 
 
+### Calculate Deltas
 Calculate delta pH, delta TA, delta DIC, delta temp, delta time
 ```{r}
 delta_calc <- data %>% 
@@ -790,7 +826,7 @@ data %>%
 ### TA/DIC Plot
 ```{r}
 data %>%
-  ggplot(aes(x = DIC, y = TA, color = substrate)) +
+  ggplot(aes(x = DIC, y = TA, color = site)) +
   geom_point(alpha = 0.8) +
   geom_smooth(method = "lm",se = FALSE) +
   facet_wrap(~substrate, scales = "free_x",
@@ -809,7 +845,8 @@ deltas %>% ggplot(aes(x = delta_pH, y = NEC)) +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-  theme_bw() 
+  theme_bw() +
+  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
 ```
 
 ```{r}
@@ -818,7 +855,20 @@ deltas %>% ggplot(aes(x = mean_pH, y = NEC)) +
   geom_smooth(method = "lm") +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-  theme_bw() 
+  theme_bw() +
+  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+
+```
+
+```{r}
+deltas %>% ggplot(aes(x = mean_pH, y = NEC, color = substrate)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") +
+  #facet_wrap(~substrate) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  theme_bw() +
+  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+
 ```
 
 ```{r}
@@ -828,7 +878,9 @@ deltas %>% ggplot(aes(x = NEP, y = delta_pH)) +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-  theme_bw()
+  theme_bw() +
+  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")))
+
 ```
 
 ```{r}
@@ -837,7 +889,18 @@ deltas %>% ggplot(aes(x = NEP, y = mean_pH)) +
   geom_smooth(method = "lm") +
   #facet_wrap(~substrate) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-  theme_bw()
+  theme_bw() +
+  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")))
+```
+
+```{r}
+deltas %>% ggplot(aes(x = NEP, y = mean_pH, color = substrate)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") +
+  #facet_wrap(~substrate) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  theme_bw() +
+  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")))
 ```
 
 ```{r}
@@ -847,6 +910,135 @@ deltas %>% ggplot(aes(x = NEP, y = NEC)) +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-  theme_bw() 
+  theme_bw() +
+  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
+       y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
 ```
 
+```{r}
+deltas %>% ggplot(aes(x = NEP, y = NEC, color = substrate)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") +
+  #facet_wrap(~substrate) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  theme_bw() +
+  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
+       y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+```
+
+### fDOM
+```{r}
+data %>% 
+  filter(!(is.na(m_to_c))) %>%
+  ggplot(aes(x = sample_time, y = m_to_c, color = pool_number)) +
+  geom_point() +
+  geom_line() + 
+  theme_bw()
+
+# M:C is lower in the tidepools than in the ocean
+# decreases over time (at night at least so far) indicating consumption of marine humics, probably by the microbes
+# expectation is this would increase during the day 
+```
+```{r}
+data %>%
+  filter(!(is.na(humics))) %>%
+  ggplot(aes(x = sample_time, y = humics, color = pool_number)) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+
+# total humics higher in the pools than in the ocean on average
+```
+```{r}
+# pretty strong relationship between oxygen and M:C
+data %>%
+  filter(!(pool_number == "ocean")) %>% # just look at the pools
+  ggplot(aes(x = dissolved_oxygen,y = m_to_c))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  labs(title = "Primary productivity is driving composition of marine to terrestrial humics",
+       subtitle = "Higher O2 = higher production of marine humics\n or more consumption with more microbial respiration since at night") +
+  theme_bw() #+ 
+  #facet_wrap(~substrate)
+```
+
+## Residuals Stuff
+### pH
+Fit regression for both substrate types combined
+```{r}
+pH_mod <- lm(pH ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
+summary(pH_mod)
+```
+
+
+```{r}
+data_resid_pH <- augment(pH_mod, (data %>% filter(!substrate == "ocean")))
+```
+
+```{r}
+resid_ph <- lm(.resid ~ substrate, data_resid_pH)
+summary(resid_ph)
+Anova(resid_ph)
+```
+
+```{r}
+resid_ph_comp <- lm(.resid ~ producer_pcover + producer_density, data_resid_pH)
+summary(resid_ph_comp)
+Anova(resid_ph_comp)
+```
+
+
+```{r}
+data_resid_pH %>% 
+  ggplot(aes(x = producer_pcover, y = .resid, color = substrate)) + 
+  geom_point() + 
+  geom_smooth() +
+  facet_wrap(~substrate)
+```
+```{r}
+data_resid_pH %>% 
+  ggplot(aes(x = producer_density, y = .resid, color = substrate)) + 
+  geom_point() + 
+  geom_smooth() +
+  facet_wrap(~substrate, scales = "free_x")
+```
+
+### TA
+Fit regression for both substrate types combined
+```{r}
+TA_mod <- lm(TA ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
+summary(TA_mod)
+```
+
+```{r}
+data_resid_TA <- augment(TA_mod, (data %>% filter(!substrate == "ocean")))
+```
+
+```{r}
+resid_TA <- lm(.resid ~ substrate, data_resid_TA)
+summary(resid_TA)
+Anova(resid_TA)
+```
+
+```{r}
+resid_TA_comp <- lm(.resid ~ calcifying_pcover + calcifying_density, data_resid_TA)
+summary(resid_TA_comp)
+Anova(resid_TA_comp)
+```
+
+```{r}
+data_resid_TA %>% 
+  ggplot(aes(x = calcifying_pcover, y = .resid, color = substrate)) + 
+  geom_point() + 
+  geom_smooth() +
+  facet_wrap(~substrate)
+```
+
+```{r}
+data_resid_TA %>% 
+  ggplot(aes(x = log(calcifying_density), y = .resid, color = substrate)) + 
+  geom_point() + 
+  geom_smooth() +
+  facet_wrap(~substrate)
+```
