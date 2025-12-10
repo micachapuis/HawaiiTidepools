@@ -102,7 +102,7 @@ Change factor order
 ```{r}
 # Change order levels 
 benthic_categories$category_name <- factor(benthic_categories$category_name, 
-                                             levels=c("Bare Rock", "Loose Rocks/Rubble", "Sand", "Turf/Cyanobacteria", "CCA", "Encrusting Algae", "Brown Algae", "Red Algae", "Green Algae", "Sponge"))
+                                             levels=c("Bare Rock", "Loose Rocks/Rubble", "Sand", "Turf/Cyanobacteria", "CCA", "Encrusting Algae", "Brown Macroalgae", "Red Macroalgae", "Green Macroalgae", "Sponge"))
 ```
 
 

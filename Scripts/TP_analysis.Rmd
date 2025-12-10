@@ -121,6 +121,8 @@ Removing Kaihalulu Data collected on 2025/06/08 due to rain
 data <- data %>% filter(!date == "2025/06/08")
 ```
 
+
+
 Join Community Comp Summary Data 
 ```{r}
 # make pool number a factor in the community comp data first
@@ -422,15 +424,47 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Pool Temp")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
+Shift times so 6:30 am is the new start time
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = temp_pool, color = substrate)) +
+start <- as.numeric(hms::as_hms("06:00:00"))
+data <- data %>%
+  mutate(
+    time_sec   = as.numeric(sample_time),
+    time_shift = (time_sec - start) %% (24 * 60 * 60)  # 0 at 06:00, increases to 05:59 next day
+  )
+```
+
+Now for the vertical line for sunset
+```{r}
+# 18:30 in seconds since midnight
+line_time <- as.numeric(hms::as_hms("18:00:00"))
+
+# Shifted position relative to 06:00
+line_shift <- (line_time - start) %% (24 * 60 * 60)
+```
+
+#### Temp over time
+```{r}
+data %>% ggplot(aes(x = time_shift, y = temp_pool, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #, se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Temperature (°C)")  + 
-  guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) 
+  guides(color = "none")  +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%h:%m")
+  ) 
+
+ggsave(here("Output", "temp_over_time.png"), width = 8, height = 6)
 ```
 
 
@@ -448,16 +482,28 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = sal
 data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "Salinity (Field)")  + theme(axis.text.x = element_text(angle = 30))
 ```
-
+#### Salinity over time
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = salinity_field, color = substrate)) +
+data %>% ggplot(aes(x = time_shift, y = salinity_field, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam")+ #, se=FALSE) + 
   geom_point() + theme_bw() +
-  labs(x = "Sample Time", y = "Salinity (psu)")  + 
+  labs(x = "Sample Time", y = "Salinity")  + 
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) 
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+   scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%h:%m")
+  ) 
+
+ggsave(here("Output", "salinity_over_time.png"), width = 8, height = 6)
 ```
 
 ### pH
@@ -503,25 +549,6 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
 
 ```
 
-Shift times so 6:30 am is the new start time
-```{r}
-start <- as.numeric(hms::as_hms("06:00:00"))
-data <- data %>%
-  mutate(
-    time_sec   = as.numeric(sample_time),
-    time_shift = (time_sec - start) %% (24 * 60 * 60)  # 0 at 06:00, increases to 05:59 next day
-  )
-```
-
-Now for the vertical line for sunset
-```{r}
-# 18:30 in seconds since midnight
-line_time <- as.numeric(hms::as_hms("18:00:00"))
-
-# Shifted position relative to 05:30
-line_shift <- (line_time - start) %% (24 * 60 * 60)
-```
-
 #### pH (not temperature normalized)
 ```{r}
 data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
@@ -531,36 +558,76 @@ data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
   geom_point() + 
   theme_bw() +
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
   geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
   labs(x = "Sample Time") +
    scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
     breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
-    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%h:%m")
   )
+
+ggsave(here("Output", "pH_over_time.png"), width = 8, height = 6)
 ```
 #### pH (Temperature Normalized)
 ```{r}
-# temp normalize: pH*temp_pool/25.2
-data %>% ggplot(aes(x = time_shift, y = pH*temp_pool/25.2, color = substrate)) +
+# temp normalize
+data %>% ggplot(aes(x = time_shift, y = (pH*temp_field)/(mean(data$temp_field)), color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
   geom_point() + 
   theme_bw() +
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
   geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
-  labs(x = "Sample Time") +
+  labs(x = "Sample Time", y = "pH (Temperature Normalized)") +
    scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
     breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
     labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
   )
+
+ggsave(here("Output", "pH_over_time_temp_normalized.png"), width = 8, height = 6)
 ```
+
+####pH (Temperature and Salinity Normalized)
+```{r}
+# temp + sal normalize
+data %>% ggplot(aes(x = time_shift, y = (((pH*temp_field)/(mean(data$temp_field)))*salinity_field)/mean(data$salinity_field), color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
+  geom_point() + 
+  theme_bw() +
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  labs(x = "Sample Time", y = "pH (Temperature + Salinity Normalized)") +
+   scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+  )
+
+ggsave(here("Output", "pH_over_time_temp_sal_normalized.png"), width = 8, height = 6)
+```
+
+
+
+
 
 ```{r}
 data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
@@ -603,7 +670,7 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = TA_
 ```
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
+data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
     facet_wrap(~substrate) +
   geom_smooth() + 
   geom_point() + 
@@ -613,14 +680,28 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
 ```
 #### TA (Salinity Normalized)
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
+data %>% ggplot(aes(x = time_shift, y = TA_norm, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #, se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Total Alkalinity")  + 
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) 
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  labs(x = "Sample Time", 
+       y = expression(paste("Total Alkalinity (",mu,"mol kg"^-1,") (Salinity Normalized"))) +
+   scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+  )
+
+ggsave(here("Output", "TA_over_time_sal_normalized.png"), width = 8, height = 6)
 ```
 #### TA (not salinity normalized)
 ```{r}
@@ -632,15 +713,21 @@ data %>% ggplot(aes(x = time_shift, y = TA, color = substrate)) +
   geom_point() + 
   theme_bw() +
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
   geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
-  labs(x = "Sample Time", y = "Total Alkalinty") +
+  labs(x = "Sample Time", 
+       y = expression(paste("Total Alkalinity (",mu,"mol kg"^-1,")"))) +
    scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
     breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
     labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
   )
+
+ggsave(here("Output", "TA_over_time.png"), width = 8, height = 6)
 ```
 
 
@@ -677,18 +764,53 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
   labs(title = "DO")  +
   theme(axis.text.x = element_text(angle = 30))
 ```
-
+#### DO over time
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = site)) +
+data %>% ggplot(aes(x = time_shift, y = dissolved_oxygen, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
-  geom_smooth(method = "lm", se=FALSE) + 
+  geom_smooth(method = "gam", se=FALSE) + 
   geom_point() + theme_bw() +
-  labs(x = "Sample Time", y = "Dissolved Oxygen")  + 
+  labs(x = "Sample Time", y = "Dissolved Oxygen (mg/L)")  + 
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) 
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+  )
+
+ggsave(here("Output", "oxygen_over_time.png"), width = 8, height = 6)  
 ```
 
+#### O2 Sat
+```{r}
+data %>% ggplot(aes(x = time_shift, y = percent_saturation, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time", y = "Oxygen Saturation (%)")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+  )
+
+ggsave(here("Output", "oxygen_sat_over_time.png"), width = 8, height = 6)  
+```
 
 ### Deltas
 ```{r}
@@ -913,7 +1035,8 @@ deltas %>%
 ### TA/DIC Plot
 ```{r}
 data %>%
-  ggplot(aes(x = DIC, y = TA, color = site)) +
+  filter(!site == "Diamond Head") %>% 
+  ggplot(aes(x = DIC, y = TA, color = substrate)) +
   geom_point(alpha = 0.8) +
   geom_smooth(method = "lm",se = FALSE) +
   facet_wrap(~substrate, scales = "free_x",
@@ -947,15 +1070,28 @@ deltas %>% ggplot(aes(x = mean_pH, y = NEC)) +
 
 ```
 
+#### Delta pH vs NEC
 ```{r}
-deltas %>% ggplot(aes(x = mean_pH, y = NEC, color = substrate)) + 
-  geom_point() + 
-  geom_smooth(method = "lm") +
+# committee meeting 
+deltas %>% 
+  filter(!pool_number == "ocean") %>% 
+  ggplot(aes(x = delta_pH, y = NEC)) + 
+  geom_point(aes(color = substrate)) + 
+  geom_smooth(method = "lm", color = "gray30") +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
   theme_bw() +
-  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")),
+       x = expression(paste(Delta, " pH")),
+       color = "Substrate") +
+  scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
 
+ggsave(here("Output", "delta_pH_vs_NEC.png"), width = 8, height = 6)
 ```
 
 ```{r}
@@ -980,16 +1116,31 @@ deltas %>% ggplot(aes(x = NEP, y = mean_pH)) +
   labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")))
 ```
 
+#### NEP vs Delta pH
 ```{r}
-deltas %>% ggplot(aes(x = NEP, y = mean_pH, color = substrate)) + 
-  geom_point() + 
-  geom_smooth(method = "lm") +
+# committee meeting
+deltas %>% 
+  filter(!pool_number == "ocean") %>% 
+  ggplot(aes(x = NEP, y = delta_pH)) + 
+  geom_point(aes(color = substrate)) + 
+  geom_smooth(method = "lm", color = "gray30") +
   #facet_wrap(~substrate) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   theme_bw() +
-  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")))
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
+       y = expression(paste(Delta, " pH")),
+       color = "Substrate") +
+  scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
+
+ggsave(here("Output", "NEP_vs_delta_pH.png"), width = 8, height = 6)
 ```
 
+#### NEP / NEC
 ```{r}
 deltas %>% ggplot(aes(x = NEP, y = NEC)) + 
   geom_point() + 
@@ -1003,40 +1154,130 @@ deltas %>% ggplot(aes(x = NEP, y = NEC)) +
 ```
 
 ```{r}
-deltas %>% ggplot(aes(x = NEP, y = NEC, color = substrate)) + 
-  geom_point() + 
-  geom_smooth(method = "lm") +
+deltas %>% 
+  filter(!pool_number == "ocean") %>%
+  ggplot(aes(x = NEP, y = NEC)) + 
+  geom_point(aes(color = substrate)) + 
+  geom_smooth(method = "lm", color = "gray30") +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
   theme_bw() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) +
   labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
-       y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+       y = expression(paste("NEC (mmol m"^-2," h"^-1,")")),
+      color = "Substrate") +
+  scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
+
+ggsave(here("Output", "NEP_vs_NEC.png"), width = 8, height = 6)
 ```
 
 ### Aragonite Saturation State
 
 ```{r}
-deltas %>% ggplot(aes(x = delta_pH, y = delta_aragonite)) + 
+data %>% #filter(!substrate %in% "ocean") %>% 
+  ggplot(aes(x = pH, y = OmegaAragonite, color = substrate)) + 
   geom_point() + 
-  geom_smooth(method = "lm") +
-  #facet_wrap(~substrate) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-
+  coord_trans(y = "log")+
+  facet_wrap(~substrate,
+             labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
+  labs(y = expression(paste(Omega ['Aragonite']))) +
+  guides(color = "none") +
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)) +
   theme_bw()
+
+#ggsave(here("Output", "OmegaArag_vs_pH.png"), width = 8, height = 4)
+
+```
+
+```{r}
+data %>% #filter(!substrate %in% "ocean") %>% 
+  ggplot(aes(x = pH, y = OmegaAragonite, color = substrate)) + 
+  geom_point() + 
+  coord_trans(y = "log")+
+  #facet_wrap(~substrate,
+  #           labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
+  labs(y = expression(paste(Omega ['Aragonite'])),
+       color = "Substrate") +
+  #guides(color = "none") +
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)) +
+  theme_bw() +
+  scale_color_manual(labels = c("Basalt", "Limestone", "Ocean"), values = c("#F8766D", "#00BA38", "#619CFF"))
+
+
+ggsave(here("Output", "OmegaArag_vs_pH.png"), width = 6, height = 4)
 ```
 
 
+
+
 ```{r}
-deltas %>% ggplot(aes(x = delta_aragonite, y = NEC)) + 
+arag_ph_mod <- lm(OmegaAragonite ~ pH*substrate, data) 
+Anova(arag_ph_mod)
+summary(arag_ph_mod)
+```
+
+
+
+```{r}
+data %>% #filter(!substrate %in% "ocean") %>% 
+  ggplot(aes(x = pH, y = OmegaCalcite, color = substrate)) + 
   geom_point() + 
-  geom_smooth(method = "lm") +
-  #facet_wrap(~substrate) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  coord_trans(y = "log")+
+  facet_wrap(~substrate,
+             labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
+  labs(y = expression(paste(Omega ['Calcite']))) +
+  guides(color = "none") +
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)) +
+  theme_bw()
+
+#ggsave(here("Output", "OmegaCalc_vs_pH.png"), width = 8, height = 4)
+
+```
+```{r}
+data %>% #filter(!substrate %in% "ocean") %>% 
+  ggplot(aes(x = pH, y = OmegaCalcite, color = substrate)) + 
+  geom_point() + 
+  coord_trans(y = "log")+
+  #facet_wrap(~substrate,
+  #           labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
+  labs(y = expression(paste(Omega ['Calcite'])),
+       color = "Substrate") +
+  #guides(color = "none") +
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)) +
   theme_bw() +
-  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+  scale_color_manual(labels = c("Basalt", "Limestone", "Ocean"), values = c("#F8766D", "#00BA38", "#619CFF"))
+
+
+ggsave(here("Output", "OmegaCalc_vs_pH.png"), width = 6, height = 4)
+```
+
+
+
+```{r}
+calc_ph_mod <- lm(OmegaCalcite ~ pH*substrate, data) 
+Anova(calc_ph_mod)
+summary(calc_ph_mod)
+```
+
+
+
+```{r}
+#deltas %>% ggplot(aes(x = delta_aragonite, y = NEC)) + 
+#  geom_point() + 
+#  geom_smooth(method = "lm") +
+#  #facet_wrap(~substrate) +
+#  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+#  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+#  theme_bw() +
+#  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
 ```
 
 
@@ -1082,6 +1323,7 @@ data %>%
 ### pH
 Fit regression for both substrate types combined
 ```{r}
+#pH_mod <- lm(((pH*temp_field)/(mean(data$temp_field))) ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
 pH_mod <- lm(pH ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
 summary(pH_mod)
 ```
@@ -1092,9 +1334,28 @@ data_resid_pH <- augment(pH_mod, (data %>% filter(!substrate == "ocean")))
 ```
 
 ```{r}
+data_resid_pH %>% ggplot(aes(x = sample_time, y = .resid)) + geom_point() + facet_wrap(~substrate)
+```
+
+
+
+```{r}
 resid_ph <- lm(.resid ~ substrate, data_resid_pH)
 summary(resid_ph)
 Anova(resid_ph)
+```
+
+```{r}
+resid_pH_temp <- lm(.resid ~ temp_field, data_resid_pH)
+summary(resid_pH_temp)
+Anova(resid_pH_temp)
+```
+```{r}
+data_resid_pH %>% 
+  ggplot(aes(x = temp_field, y = .resid, color = substrate)) + 
+  geom_point() + 
+  geom_smooth() +
+  facet_wrap(~substrate)
 ```
 
 ```{r}
@@ -1154,6 +1415,6 @@ data_resid_TA %>%
 data_resid_TA %>% 
   ggplot(aes(x = log(calcifying_density), y = .resid, color = substrate)) + 
   geom_point() + 
-  geom_smooth() +
+  geom_smooth(method = "lm", formula = y~poly(x,2)) +
   facet_wrap(~substrate)
 ```

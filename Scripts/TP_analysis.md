@@ -467,20 +467,59 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
 
 ![](TP_analysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
+Shift times so 6:30 am is the new start time
+
 ``` r
-data %>% ggplot(aes(x = sample_time, y = temp_pool, color = substrate)) +
+start <- as.numeric(hms::as_hms("06:00:00"))
+data <- data %>%
+  mutate(
+    time_sec   = as.numeric(sample_time),
+    time_shift = (time_sec - start) %% (24 * 60 * 60)  # 0 at 06:00, increases to 05:59 next day
+  )
+```
+
+Now for the vertical line for sunset
+
+``` r
+# 18:30 in seconds since midnight
+line_time <- as.numeric(hms::as_hms("18:00:00"))
+
+# Shifted position relative to 06:00
+line_shift <- (line_time - start) %% (24 * 60 * 60)
+```
+
+#### Temp over time
+
+``` r
+data %>% ggplot(aes(x = time_shift, y = temp_pool, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #, se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Temperature (°C)")  + 
-  guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) 
+  guides(color = "none")  +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%h:%m")
+  ) 
 ```
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "temp_over_time.png"), width = 8, height = 6)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
 ### Pool Salinity
 
@@ -488,7 +527,7 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool, color = substrate)) +
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = salinity_pool, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (pool)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = salinity_pool, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (pool)")  + theme(axis.text.x = element_text(angle = 30))
@@ -500,7 +539,7 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = sal
     ## Warning: Removed 66 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
@@ -509,22 +548,39 @@ data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-43-1.png)<!-- --> \####
+Salinity over time
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = salinity_field, color = substrate)) +
+data %>% ggplot(aes(x = time_shift, y = salinity_field, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam")+ #, se=FALSE) + 
   geom_point() + theme_bw() +
-  labs(x = "Sample Time", y = "Salinity (psu)")  + 
+  labs(x = "Sample Time", y = "Salinity")  + 
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) 
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+   scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%h:%m")
+  ) 
 ```
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "salinity_over_time.png"), width = 8, height = 6)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
 ### pH
 
@@ -533,28 +589,28 @@ data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y =
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-45-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = pH, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-46-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = pH_probe, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (probe)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-45-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-47-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = pH_probe, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (probe)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-46-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH)) +
@@ -563,7 +619,7 @@ data %>% ggplot(aes(x = sample_time, y = pH)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-47-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
@@ -615,7 +671,7 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
     ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
     ## -Inf
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-50-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
@@ -630,28 +686,7 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->
-
-Shift times so 6:30 am is the new start time
-
-``` r
-start <- as.numeric(hms::as_hms("06:00:00"))
-data <- data %>%
-  mutate(
-    time_sec   = as.numeric(sample_time),
-    time_shift = (time_sec - start) %% (24 * 60 * 60)  # 0 at 06:00, increases to 05:59 next day
-  )
-```
-
-Now for the vertical line for sunset
-
-``` r
-# 18:30 in seconds since midnight
-line_time <- as.numeric(hms::as_hms("18:00:00"))
-
-# Shifted position relative to 05:30
-line_shift <- (line_time - start) %% (24 * 60 * 60)
-```
+![](TP_analysis_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
 
 #### pH (not temperature normalized)
 
@@ -663,34 +698,47 @@ data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
   geom_point() + 
   theme_bw() +
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
   geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
   labs(x = "Sample Time") +
    scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
     breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
-    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%h:%m")
   )
 ```
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-52-1.png)<!-- --> \####
-pH (Temperature Normalized)
+![](TP_analysis_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
 
 ``` r
-# temp normalize: pH*temp_pool/25.2
-data %>% ggplot(aes(x = time_shift, y = pH*temp_pool/25.2, color = substrate)) +
+ggsave(here("Output", "pH_over_time.png"), width = 8, height = 6)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
+
+#### pH (Temperature Normalized)
+
+``` r
+# temp normalize
+data %>% ggplot(aes(x = time_shift, y = (pH*temp_field)/(mean(data$temp_field)), color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
   geom_point() + 
   theme_bw() +
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
   geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
-  labs(x = "Sample Time") +
+  labs(x = "Sample Time", y = "pH (Temperature Normalized)") +
    scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
@@ -699,9 +747,83 @@ data %>% ggplot(aes(x = time_shift, y = pH*temp_pool/25.2, color = substrate)) +
   )
 ```
 
+    ## Warning: Use of `data$temp_field` is discouraged.
+    ## ℹ Use `temp_field` instead.
+    ## Use of `data$temp_field` is discouraged.
+    ## ℹ Use `temp_field` instead.
+
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
 ![](TP_analysis_files/figure-gfm/unnamed-chunk-53-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "pH_over_time_temp_normalized.png"), width = 8, height = 6)
+```
+
+    ## Warning: Use of `data$temp_field` is discouraged.
+    ## ℹ Use `temp_field` instead.
+    ## Use of `data$temp_field` is discouraged.
+    ## ℹ Use `temp_field` instead.
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
+
+\####pH (Temperature and Salinity Normalized)
+
+``` r
+# temp + sal normalize
+data %>% ggplot(aes(x = time_shift, y = (((pH*temp_field)/(mean(data$temp_field)))*salinity_field)/mean(data$salinity_field), color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
+  geom_point() + 
+  theme_bw() +
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  labs(x = "Sample Time", y = "pH (Temperature + Salinity Normalized)") +
+   scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+  )
+```
+
+    ## Warning: Use of `data$temp_field` is discouraged.
+    ## ℹ Use `temp_field` instead.
+
+    ## Warning: Use of `data$salinity_field` is discouraged.
+    ## ℹ Use `salinity_field` instead.
+
+    ## Warning: Use of `data$temp_field` is discouraged.
+    ## ℹ Use `temp_field` instead.
+
+    ## Warning: Use of `data$salinity_field` is discouraged.
+    ## ℹ Use `salinity_field` instead.
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "pH_over_time_temp_sal_normalized.png"), width = 8, height = 6)
+```
+
+    ## Warning: Use of `data$temp_field` is discouraged.
+    ## ℹ Use `temp_field` instead.
+    ## Use of `data$salinity_field` is discouraged.
+    ## ℹ Use `salinity_field` instead.
+
+    ## Warning: Use of `data$temp_field` is discouraged.
+    ## ℹ Use `temp_field` instead.
+
+    ## Warning: Use of `data$salinity_field` is discouraged.
+    ## ℹ Use `salinity_field` instead.
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
 ``` r
 data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
@@ -730,7 +852,7 @@ data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
 
 ``` r
 #ggsave(here("Output", "pH_over_time.png"), width = 6, height = 2)
@@ -742,16 +864,16 @@ data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-56-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-56-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
+data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
     facet_wrap(~substrate) +
   geom_smooth() + 
   geom_point() + 
@@ -762,80 +884,24 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm, color = site)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : span too small.  fewer data values than degrees of freedom.
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : pseudoinverse used at 4710.9
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : neighborhood radius 17489
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : reciprocal condition number 0
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
-    ## : There are other near singularities as well. 1.5949e+08
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : span too small.  fewer
-    ## data values than degrees of freedom.
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : pseudoinverse used at
-    ## 4710.9
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : neighborhood radius
-    ## 17489
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : reciprocal condition
-    ## number 0
-
-    ## Warning in predLoess(object$y, object$x, newx = if (is.null(newdata)) object$x
-    ## else if (is.data.frame(newdata))
-    ## as.matrix(model.frame(delete.response(terms(object)), : There are other near
-    ## singularities as well. 1.5949e+08
-
-    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
-    ## -Inf
-
-![](TP_analysis_files/figure-gfm/unnamed-chunk-57-1.png)<!-- --> \####
+![](TP_analysis_files/figure-gfm/unnamed-chunk-58-1.png)<!-- --> \####
 TA (Salinity Normalized)
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = TA_norm, color = substrate)) +
+data %>% ggplot(aes(x = time_shift, y = TA_norm, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #, se=FALSE) + 
   geom_point() + theme_bw() +
   labs(x = "Sample Time", y = "Total Alkalinity")  + 
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) 
-```
-
-    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
-
-![](TP_analysis_files/figure-gfm/unnamed-chunk-58-1.png)<!-- --> \####
-TA (not salinity normalized)
-
-``` r
-# for TA over time plot use raw data, not normalized
-data %>% ggplot(aes(x = time_shift, y = TA, color = substrate)) +
-    facet_wrap(~substrate, 
-               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
-  geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
-  geom_point() + 
-  theme_bw() +
-  guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
   geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
-  labs(x = "Sample Time", y = "Total Alkalinty") +
+  labs(x = "Sample Time", 
+       y = expression(paste("Total Alkalinity (",mu,"mol kg"^-1,") (Salinity Normalized"))) +
    scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
@@ -847,6 +913,48 @@ data %>% ggplot(aes(x = time_shift, y = TA, color = substrate)) +
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
 ![](TP_analysis_files/figure-gfm/unnamed-chunk-59-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "TA_over_time_sal_normalized.png"), width = 8, height = 6)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
+
+#### TA (not salinity normalized)
+
+``` r
+# for TA over time plot use raw data, not normalized
+data %>% ggplot(aes(x = time_shift, y = TA, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
+  geom_point() + 
+  theme_bw() +
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  labs(x = "Sample Time", 
+       y = expression(paste("Total Alkalinity (",mu,"mol kg"^-1,")"))) +
+   scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+  )
+```
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-60-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "TA_over_time.png"), width = 8, height = 6)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
 TA Not normalized to salinity
 
@@ -863,7 +971,7 @@ data %>% ggplot(aes(x = sample_time, y = TA, color = substrate)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-60-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-61-1.png)<!-- -->
 
 ### O2
 
@@ -871,7 +979,7 @@ data %>% ggplot(aes(x = sample_time, y = TA, color = substrate)) +
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-61-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-62-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
@@ -883,7 +991,7 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = dis
     ## Warning: Removed 66 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-62-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
@@ -903,20 +1011,31 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
     ## Warning: Removed 117 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-64-1.png)<!-- --> \####
+DO over time
 
 ``` r
-data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = site)) +
+data %>% ggplot(aes(x = time_shift, y = dissolved_oxygen, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
-  geom_smooth(method = "lm", se=FALSE) + 
+  geom_smooth(method = "gam", se=FALSE) + 
   geom_point() + theme_bw() +
-  labs(x = "Sample Time", y = "Dissolved Oxygen")  + 
+  labs(x = "Sample Time", y = "Dissolved Oxygen (mg/L)")  + 
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25)) 
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+  )
 ```
 
-    ## `geom_smooth()` using formula = 'y ~ x'
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
     ## Warning: Removed 117 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
@@ -924,7 +1043,71 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = site)) +
     ## Warning: Removed 117 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-64-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-65-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "oxygen_over_time.png"), width = 8, height = 6)  
+```
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 117 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+    ## Removed 117 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+#### O2 Sat
+
+``` r
+data %>% ggplot(aes(x = time_shift, y = percent_saturation, color = substrate)) +
+    facet_wrap(~substrate, 
+               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam", se=FALSE) + 
+  geom_point() + theme_bw() +
+  labs(x = "Sample Time", y = "Oxygen Saturation (%)")  + 
+  guides(color = "none") +
+  theme(axis.text.x = element_text(angle = 25),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
+    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+  )
+```
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 165 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Failed to fit group 3.
+    ## Caused by error in `smooth.construct.cr.smooth.spec()`:
+    ## ! x has insufficient unique values to support 10 knots: reduce k.
+
+    ## Warning: Removed 165 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-66-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "oxygen_sat_over_time.png"), width = 8, height = 6)  
+```
+
+    ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 165 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Failed to fit group 3.
+    ## Caused by error in `smooth.construct.cr.smooth.spec()`:
+    ## ! x has insufficient unique values to support 10 knots: reduce k.
+
+    ## Warning: Removed 165 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
 
 ### Deltas
 
@@ -946,7 +1129,7 @@ deltas %>% ggplot(aes(x = substrate, y = delta_pH_norm, color = substrate)) + #,
     ## Warning: Removed 22 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-65-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-67-1.png)<!-- -->
 
 ``` r
 deltas %>% ggplot(aes(x = substrate, y = delta_TA_norm, color = substrate)) + #, label = pool_number)) + 
@@ -966,7 +1149,7 @@ deltas %>% ggplot(aes(x = substrate, y = delta_TA_norm, color = substrate)) + #,
     ## Warning: Removed 22 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-66-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-68-1.png)<!-- -->
 
 ### Delta TA vs Delta pH
 
@@ -998,7 +1181,7 @@ deltas %>%
     ## Warning: Removed 22 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-67-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-69-1.png)<!-- -->
 
 ``` r
 #ggsave(here("Output", "delta_TA_vs_delta_pH.png"), width = 4, height = 8)
@@ -1041,7 +1224,7 @@ deltas %>%
     ## Warning: Removed 20 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-68-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-70-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "delta_TA_vs_delta_pH_onepanel.png"), width = 4, height = 4)
@@ -1068,7 +1251,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-69-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-71-1.png)<!-- -->
 
 ``` r
 # committee meeting figure
@@ -1091,7 +1274,7 @@ deltas %>%
     ## Warning: Removed 20 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-70-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-72-1.png)<!-- -->
 
 #### Delta DIC vs Delta pH (Time Normalized)
 
@@ -1126,7 +1309,7 @@ deltas %>%
     ## Warning: Removed 20 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-71-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-73-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "delta_DIC_vs_delta_pH_onepanel.png"), width = 4, height = 4)
@@ -1158,7 +1341,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-72-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-74-1.png)<!-- -->
 
 ### Salinity vs temp
 
@@ -1175,7 +1358,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-73-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-75-1.png)<!-- -->
 
 ### DO and pH
 
@@ -1199,7 +1382,7 @@ data %>%
     ## Warning: Removed 117 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-74-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-76-1.png)<!-- -->
 
 #### Delta pH vs Delta O2 (Time Normalized)
 
@@ -1237,7 +1420,7 @@ deltas %>%
     ## Warning: Removed 83 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-75-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-77-1.png)<!-- -->
 
 ``` r
 # Time normalized delta ph vs delta o2
@@ -1270,13 +1453,14 @@ deltas %>%
     ## Warning: Removed 83 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-76-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-78-1.png)<!-- -->
 
 ### TA/DIC Plot
 
 ``` r
 data %>%
-  ggplot(aes(x = DIC, y = TA, color = site)) +
+  filter(!site == "Diamond Head") %>% 
+  ggplot(aes(x = DIC, y = TA, color = substrate)) +
   geom_point(alpha = 0.8) +
   geom_smooth(method = "lm",se = FALSE) +
   facet_wrap(~substrate, scales = "free_x",
@@ -1289,7 +1473,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-77-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-79-1.png)<!-- -->
 
 ### NEC + NEP
 
@@ -1312,7 +1496,7 @@ deltas %>% ggplot(aes(x = delta_pH, y = NEC)) +
     ## Warning: Removed 115 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-78-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-80-1.png)<!-- -->
 
 ``` r
 deltas %>% ggplot(aes(x = mean_pH, y = NEC)) + 
@@ -1332,27 +1516,51 @@ deltas %>% ggplot(aes(x = mean_pH, y = NEC)) +
     ## Warning: Removed 115 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-79-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-81-1.png)<!-- -->
+
+#### Delta pH vs NEC
 
 ``` r
-deltas %>% ggplot(aes(x = mean_pH, y = NEC, color = substrate)) + 
-  geom_point() + 
-  geom_smooth(method = "lm") +
+# committee meeting 
+deltas %>% 
+  filter(!pool_number == "ocean") %>% 
+  ggplot(aes(x = delta_pH, y = NEC)) + 
+  geom_point(aes(color = substrate)) + 
+  geom_smooth(method = "lm", color = "gray30") +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
   theme_bw() +
-  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")),
+       x = expression(paste(Delta, " pH")),
+       color = "Substrate") +
+  scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
 ```
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 115 rows containing non-finite outside the scale range
+    ## Warning: Removed 93 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 115 rows containing missing values or values outside the scale range
+    ## Warning: Removed 93 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-80-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-82-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "delta_pH_vs_NEC.png"), width = 8, height = 6)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+    ## Warning: Removed 93 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+    ## Removed 93 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
 
 ``` r
 deltas %>% ggplot(aes(x = NEP, y = delta_pH)) + 
@@ -1373,7 +1581,7 @@ deltas %>% ggplot(aes(x = NEP, y = delta_pH)) +
     ## Warning: Removed 115 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-81-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-83-1.png)<!-- -->
 
 ``` r
 deltas %>% ggplot(aes(x = NEP, y = mean_pH)) + 
@@ -1393,27 +1601,53 @@ deltas %>% ggplot(aes(x = NEP, y = mean_pH)) +
     ## Warning: Removed 115 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-82-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-84-1.png)<!-- -->
+
+#### NEP vs Delta pH
 
 ``` r
-deltas %>% ggplot(aes(x = NEP, y = mean_pH, color = substrate)) + 
-  geom_point() + 
-  geom_smooth(method = "lm") +
+# committee meeting
+deltas %>% 
+  filter(!pool_number == "ocean") %>% 
+  ggplot(aes(x = NEP, y = delta_pH)) + 
+  geom_point(aes(color = substrate)) + 
+  geom_smooth(method = "lm", color = "gray30") +
   #facet_wrap(~substrate) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   theme_bw() +
-  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")))
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) + 
+  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
+       y = expression(paste(Delta, " pH")),
+       color = "Substrate") +
+  scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
 ```
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 115 rows containing non-finite outside the scale range
+    ## Warning: Removed 93 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 115 rows containing missing values or values outside the scale range
+    ## Warning: Removed 93 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-83-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-85-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "NEP_vs_delta_pH.png"), width = 8, height = 6)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+    ## Warning: Removed 93 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+    ## Removed 93 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+#### NEP / NEC
 
 ``` r
 deltas %>% ggplot(aes(x = NEP, y = NEC)) + 
@@ -1435,73 +1669,231 @@ deltas %>% ggplot(aes(x = NEP, y = NEC)) +
     ## Warning: Removed 115 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-84-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-86-1.png)<!-- -->
 
 ``` r
-deltas %>% ggplot(aes(x = NEP, y = NEC, color = substrate)) + 
-  geom_point() + 
-  geom_smooth(method = "lm") +
+deltas %>% 
+  filter(!pool_number == "ocean") %>%
+  ggplot(aes(x = NEP, y = NEC)) + 
+  geom_point(aes(color = substrate)) + 
+  geom_smooth(method = "lm", color = "gray30") +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
   theme_bw() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) +
   labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
-       y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+       y = expression(paste("NEC (mmol m"^-2," h"^-1,")")),
+      color = "Substrate") +
+  scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
 ```
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 115 rows containing non-finite outside the scale range
+    ## Warning: Removed 93 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 115 rows containing missing values or values outside the scale range
+    ## Warning: Removed 93 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-85-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-87-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "NEP_vs_NEC.png"), width = 8, height = 6)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+    ## Warning: Removed 93 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+    ## Removed 93 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
 
 ### Aragonite Saturation State
 
 ``` r
-deltas %>% ggplot(aes(x = delta_pH, y = delta_aragonite)) + 
+data %>% #filter(!substrate %in% "ocean") %>% 
+  ggplot(aes(x = pH, y = OmegaAragonite, color = substrate)) + 
   geom_point() + 
-  geom_smooth(method = "lm") +
-  #facet_wrap(~substrate) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-
+  coord_trans(y = "log")+
+  facet_wrap(~substrate,
+             labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
+  labs(y = expression(paste(Omega ['Aragonite']))) +
+  guides(color = "none") +
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)) +
   theme_bw()
 ```
 
-    ## `geom_smooth()` using formula = 'y ~ x'
-
-    ## Warning: Removed 22 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
-
-    ## Warning: Removed 22 rows containing missing values or values outside the scale range
-    ## (`geom_point()`).
-
-![](TP_analysis_files/figure-gfm/unnamed-chunk-86-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-88-1.png)<!-- -->
 
 ``` r
-deltas %>% ggplot(aes(x = delta_aragonite, y = NEC)) + 
-  geom_point() + 
-  geom_smooth(method = "lm") +
-  #facet_wrap(~substrate) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-  theme_bw() +
-  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+#ggsave(here("Output", "OmegaArag_vs_pH.png"), width = 8, height = 4)
 ```
 
-    ## `geom_smooth()` using formula = 'y ~ x'
+``` r
+data %>% #filter(!substrate %in% "ocean") %>% 
+  ggplot(aes(x = pH, y = OmegaAragonite, color = substrate)) + 
+  geom_point() + 
+  coord_trans(y = "log")+
+  #facet_wrap(~substrate,
+  #           labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
+  labs(y = expression(paste(Omega ['Aragonite'])),
+       color = "Substrate") +
+  #guides(color = "none") +
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)) +
+  theme_bw() +
+  scale_color_manual(labels = c("Basalt", "Limestone", "Ocean"), values = c("#F8766D", "#00BA38", "#619CFF"))
+```
 
-    ## Warning: Removed 115 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
+![](TP_analysis_files/figure-gfm/unnamed-chunk-89-1.png)<!-- -->
 
-    ## Warning: Removed 115 rows containing missing values or values outside the scale range
-    ## (`geom_point()`).
+``` r
+ggsave(here("Output", "OmegaArag_vs_pH.png"), width = 6, height = 4)
+```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-87-1.png)<!-- -->
+``` r
+arag_ph_mod <- lm(OmegaAragonite ~ pH*substrate, data) 
+Anova(arag_ph_mod)
+```
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: OmegaAragonite
+    ##               Sum Sq  Df F value    Pr(>F)    
+    ## pH           1279.29   1 985.499 < 2.2e-16 ***
+    ## substrate      75.68   2  29.151 2.982e-12 ***
+    ## pH:substrate   69.68   2  26.840 2.062e-11 ***
+    ## Residuals     372.56 287                      
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+summary(arag_ph_mod)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = OmegaAragonite ~ pH * substrate, data = data)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -5.9793 -0.3526 -0.0700  0.2458  8.4781 
+    ## 
+    ## Coefficients:
+    ##                       Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)           -36.9795     2.1615 -17.108  < 2e-16 ***
+    ## pH                      5.0630     0.2613  19.375  < 2e-16 ***
+    ## substratelimestone    -23.4374     3.3484  -6.999 1.82e-11 ***
+    ## substrateocean         -6.3089    15.5933  -0.405    0.686    
+    ## pH:substratelimestone   2.9971     0.4093   7.323 2.46e-12 ***
+    ## pH:substrateocean       0.7440     1.9410   0.383    0.702    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.139 on 287 degrees of freedom
+    ## Multiple R-squared:  0.7919, Adjusted R-squared:  0.7883 
+    ## F-statistic: 218.4 on 5 and 287 DF,  p-value: < 2.2e-16
+
+``` r
+data %>% #filter(!substrate %in% "ocean") %>% 
+  ggplot(aes(x = pH, y = OmegaCalcite, color = substrate)) + 
+  geom_point() + 
+  coord_trans(y = "log")+
+  facet_wrap(~substrate,
+             labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
+  labs(y = expression(paste(Omega ['Calcite']))) +
+  guides(color = "none") +
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)) +
+  theme_bw()
+```
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-91-1.png)<!-- -->
+
+``` r
+#ggsave(here("Output", "OmegaCalc_vs_pH.png"), width = 8, height = 4)
+```
+
+``` r
+data %>% #filter(!substrate %in% "ocean") %>% 
+  ggplot(aes(x = pH, y = OmegaCalcite, color = substrate)) + 
+  geom_point() + 
+  coord_trans(y = "log")+
+  #facet_wrap(~substrate,
+  #           labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
+  labs(y = expression(paste(Omega ['Calcite'])),
+       color = "Substrate") +
+  #guides(color = "none") +
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)) +
+  theme_bw() +
+  scale_color_manual(labels = c("Basalt", "Limestone", "Ocean"), values = c("#F8766D", "#00BA38", "#619CFF"))
+```
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-92-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "OmegaCalc_vs_pH.png"), width = 6, height = 4)
+```
+
+``` r
+calc_ph_mod <- lm(OmegaCalcite ~ pH*substrate, data) 
+Anova(calc_ph_mod)
+```
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: OmegaCalcite
+    ##               Sum Sq  Df F value    Pr(>F)    
+    ## pH           2901.82   1 965.875 < 2.2e-16 ***
+    ## substrate     172.20   2  28.659 4.492e-12 ***
+    ## pH:substrate  157.70   2  26.246 3.404e-11 ***
+    ## Residuals     862.25 287                      
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+summary(calc_ph_mod)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = OmegaCalcite ~ pH * substrate, data = data)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -9.0187 -0.5091 -0.0772  0.3558 12.7161 
+    ## 
+    ## Coefficients:
+    ##                       Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)           -55.6786     3.2883 -16.932  < 2e-16 ***
+    ## pH                      7.6275     0.3975  19.187  < 2e-16 ***
+    ## substratelimestone    -35.2548     5.0940  -6.921 2.93e-11 ***
+    ## substrateocean         -9.4683    23.7223  -0.399    0.690    
+    ## pH:substratelimestone   4.5087     0.6227   7.241 4.11e-12 ***
+    ## pH:substrateocean       1.1161     2.9529   0.378    0.706    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.733 on 287 degrees of freedom
+    ## Multiple R-squared:  0.7886, Adjusted R-squared:  0.7849 
+    ## F-statistic: 214.1 on 5 and 287 DF,  p-value: < 2.2e-16
+
+``` r
+#deltas %>% ggplot(aes(x = delta_aragonite, y = NEC)) + 
+#  geom_point() + 
+#  geom_smooth(method = "lm") +
+#  #facet_wrap(~substrate) +
+#  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+#  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+#  theme_bw() +
+#  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")))
+```
 
 ### fDOM
 
@@ -1514,7 +1906,7 @@ data %>%
   theme_bw()
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-88-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-95-1.png)<!-- -->
 
 ``` r
 # M:C is lower in the tidepools than in the ocean
@@ -1531,7 +1923,7 @@ data %>%
   theme_bw()
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-89-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-96-1.png)<!-- -->
 
 ``` r
 # total humics higher in the pools than in the ocean on average
@@ -1557,7 +1949,7 @@ data %>%
     ## Warning: Removed 232 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-90-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-97-1.png)<!-- -->
 
 ``` r
   #facet_wrap(~substrate)
@@ -1570,6 +1962,7 @@ data %>%
 Fit regression for both substrate types combined
 
 ``` r
+#pH_mod <- lm(((pH*temp_field)/(mean(data$temp_field))) ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
 pH_mod <- lm(pH ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
 summary(pH_mod)
 ```
@@ -1597,6 +1990,12 @@ summary(pH_mod)
 ``` r
 data_resid_pH <- augment(pH_mod, (data %>% filter(!substrate == "ocean")))
 ```
+
+``` r
+data_resid_pH %>% ggplot(aes(x = sample_time, y = .resid)) + geom_point() + facet_wrap(~substrate)
+```
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-100-1.png)<!-- -->
 
 ``` r
 resid_ph <- lm(.resid ~ substrate, data_resid_pH)
@@ -1630,6 +2029,55 @@ Anova(resid_ph)
     ##           Sum Sq  Df F value Pr(>F)
     ## substrate  0.016   1  0.1893 0.6638
     ## Residuals 21.906 260
+
+``` r
+resid_pH_temp <- lm(.resid ~ temp_field, data_resid_pH)
+summary(resid_pH_temp)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = .resid ~ temp_field, data = data_resid_pH)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.58160 -0.19164 -0.05791  0.19568  0.81884 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) -0.867273   0.172766  -5.020 9.60e-07 ***
+    ## temp_field   0.033305   0.006602   5.045 8.53e-07 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.2771 on 260 degrees of freedom
+    ## Multiple R-squared:  0.08916,    Adjusted R-squared:  0.08565 
+    ## F-statistic: 25.45 on 1 and 260 DF,  p-value: 8.533e-07
+
+``` r
+Anova(resid_pH_temp)
+```
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: .resid
+    ##             Sum Sq  Df F value    Pr(>F)    
+    ## temp_field  1.9545   1   25.45 8.533e-07 ***
+    ## Residuals  19.9676 260                      
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+data_resid_pH %>% 
+  ggplot(aes(x = temp_field, y = .resid, color = substrate)) + 
+  geom_point() + 
+  geom_smooth() +
+  facet_wrap(~substrate)
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-103-1.png)<!-- -->
 
 ``` r
 resid_ph_comp <- lm(.resid ~ producer_pcover + producer_density, data_resid_pH)
@@ -1687,7 +2135,7 @@ data_resid_pH %>%
     ## Warning: Removed 97 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-95-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-105-1.png)<!-- -->
 
 ``` r
 data_resid_pH %>% 
@@ -1705,7 +2153,7 @@ data_resid_pH %>%
     ## Warning: Removed 100 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-96-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-106-1.png)<!-- -->
 
 ### TA
 
@@ -1834,17 +2282,15 @@ data_resid_TA %>%
     ## Warning: Removed 97 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-101-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-111-1.png)<!-- -->
 
 ``` r
 data_resid_TA %>% 
   ggplot(aes(x = log(calcifying_density), y = .resid, color = substrate)) + 
   geom_point() + 
-  geom_smooth() +
+  geom_smooth(method = "lm", formula = y~poly(x,2)) +
   facet_wrap(~substrate)
 ```
-
-    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
     ## Warning: Removed 100 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
@@ -1852,4 +2298,4 @@ data_resid_TA %>%
     ## Warning: Removed 100 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-102-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-112-1.png)<!-- -->
