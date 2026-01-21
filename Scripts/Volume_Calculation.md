@@ -16,44 +16,53 @@ library(here)
 ## Load the Data
 
 ``` r
-curve <- read_csv(here("Data", "Volume", "nyssas_curve.csv"))
+curve <- read_csv(here("Data", "Volume", "dye_curve.csv"))
 tp_absorbance <- read_csv(here("Data", "Volume", "tidepool_absorbances.csv"))
 ```
 
 ## Calculation Code Taken from Silbiger Lab Protocols
 
-Analyze Data
+Analyze data
 
 ``` r
-curve %>% # this is the dataframe
-  group_by(Machine,DyeVolume) %>% # grouping by machine and dye volume
-  ggplot(aes(x= Absorbance, y= Volume))+   # setup plot with x and y data
-  geom_line() + # adding lines
-  facet_wrap(~Machine*DyeVolume) # dividing plots by machine and dye volume 
+# average the technical replicate absorbances to get one absorbance value per replicate (3 values per dye/water combination)
+curve_reps <- curve %>%
+              group_by(dye_volume_ml, water_volume_l, replicate) %>%
+              summarise(replicate_absorbance = mean(calculated_absorbance))
 ```
 
-![](Volume_Calculation_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+    ## `summarise()` has grouped output by 'dye_volume_ml', 'water_volume_l'. You can
+    ## override using the `.groups` argument.
+
+``` r
+curve_reps %>% # this is the dataframe
+  group_by(dye_volume_ml) %>% # grouping by dye volume
+  ggplot(aes(x= replicate_absorbance, y= water_volume_l))+   # setup plot with x and y data
+  geom_line() + # adding lines
+  facet_wrap(~dye_volume_ml) # dividing plots by dye volume 
+```
+
+![](Volume_Calculation_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 Write a power function for each curve
 
 ``` r
-pool_coefs <- curve %>%
-              group_by(Machine,DyeVolume) %>% #grouping by machine and dye volume
-              nest()%>% # nest everything by machine and dye volume
+pool_coefs <- curve_reps %>%
+              group_by(dye_volume_ml) %>% #grouping by  dye volume
+              nest()%>% # nest everything by dye volume
               mutate( # mutate the dataframe
-                fit = map(data,~nls(Volume~b*Absorbance^z, start = list(b=-1, z=-1), data = .)), # run the regression model
+                fit = map(data,~nls(water_volume_l~b*replicate_absorbance^z, start = list(b=-1, z=-1), data = .)), # run the regression model
                 tidied = map(fit,tidy)) %>% # make it clean 
               unnest(tidied) %>% # unnest the data so that it is a dataframe again
-              select(c(Machine, DyeVolume, term, estimate)) %>% # only select the parameters that we want
-              spread(key = term, value =  estimate) %>% # spread the data so that each parameter has its own column
-              filter(Machine %in% "SS3000") # filter out Machine Gen5
+              select(c(dye_volume_ml, term, estimate)) %>% # only select the parameters that we want
+              spread(key = term, value =  estimate) # spread the data so that each parameter has its own column
 ```
 
 Plot the Results
 
 ``` r
 formula <- y~I(b*x^z) # power function
-ggplot(curve, aes(x = Absorbance, y = Volume))+
+ggplot(curve_reps, aes(x = replicate_absorbance, y = water_volume_l))+
   geom_point()+
   geom_smooth(method="nls",  # add best fit line
               formula=formula, # this is an nls argument
@@ -70,7 +79,7 @@ ggplot(curve, aes(x = Absorbance, y = Volume))+
                                   "%+-%", signif(..z_se.., digits = 2),
                                   sep = "")),
                 parse = TRUE) +
-  facet_wrap(~Machine*DyeVolume, labeller = label_both)+
+  facet_wrap(~dye_volume_ml, labeller = label_both)+
   theme_bw()
 ```
 
@@ -80,7 +89,7 @@ ggplot(curve, aes(x = Absorbance, y = Volume))+
     ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
     ## generated.
 
-![](Volume_Calculation_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](Volume_Calculation_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ``` r
 ggsave(here("Data", "Volume", "DyeStandardCurves.png"), device = 'png',width = 9, height = 6)
@@ -88,27 +97,39 @@ ggsave(here("Data", "Volume", "DyeStandardCurves.png"), device = 'png',width = 9
 
 ## Now Calculate Pool Volumes
 
-Join the data and calculate pool volume, then take The formula is
-A=bV^z, where A is absorbance and V is volume We are using V = (A /
-b)^(1/z)
+Take the average absorbance for each technical replicate
 
 ``` r
-volume_calc <- tp_absorbance %>%
-              left_join(pool_coefs, by = c("dye_volume_ml" = "DyeVolume")) %>%
-              mutate(pool_volume = (calculated_absorbance / b)^(1 / z))
+# average the technical replicate absorbances to get one absorbance value per replicate (3 values per pool)
+tp_absorbance_reps <- tp_absorbance %>%
+                      group_by(pool_number, replicate, dye_volume_ml) %>%
+                      summarise(replicate_absorbance = mean(calculated_absorbance, na.rm = TRUE))
 ```
 
-Take the average volume for each tidepool and calculate SE and SD
+    ## `summarise()` has grouped output by 'pool_number', 'replicate'. You can
+    ## override using the `.groups` argument.
+
+Join the data and calculate pool volume, then take  
+The formula is A=bV^z, where A is absorbance and V is volume  
+We are using V = (A / b)^(1/z)
+
+``` r
+volume_calc <- tp_absorbance_reps %>%
+              left_join(pool_coefs, by = "dye_volume_ml") %>%
+              mutate(pool_volume = (replicate_absorbance / b)^(1 / z))
+```
+
+Average the replicate volumes for each tidepool and calculate SD and SE
 
 ``` r
 pool_volumes <- volume_calc %>%
-                    group_by(pool_number) %>%
-                    summarise(
-                      mean_volume = mean(pool_volume, na.rm = TRUE),
-                      sd_volume = sd(pool_volume, na.rm = TRUE),
-                      se_volume = sd(pool_volume, na.rm = TRUE) / sqrt(n()))
+                  group_by(pool_number) %>%
+                  summarise(
+                     mean_volume = mean(pool_volume, na.rm = TRUE),
+                     sd_volume = sd(pool_volume, na.rm = TRUE),
+                     se_volume = sd(pool_volume, na.rm = TRUE) / sqrt(n()))
 ```
 
 ``` r
-write_csv(pool_volumes, here("Data", "pool_volumes.csv"))
+#write_csv(pool_volumes, here("Data", "pool_volumes.csv"))
 ```

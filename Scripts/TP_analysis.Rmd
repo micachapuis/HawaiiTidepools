@@ -1032,6 +1032,15 @@ deltas %>%
         ) 
 ```
 
+```{r}
+deltas %>% 
+  ggplot(aes(x = delta_DIC_norm, y = delta_O2_norm)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+
+
 ### TA/DIC Plot
 ```{r}
 data %>%
@@ -1323,8 +1332,8 @@ data %>%
 ### pH
 Fit regression for both substrate types combined
 ```{r}
-#pH_mod <- lm(((pH*temp_field)/(mean(data$temp_field))) ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
-pH_mod <- lm(pH ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
+pH_mod <- lm(((pH*temp_field)/(mean(data$temp_field))) ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
+#pH_mod <- lm(pH ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
 summary(pH_mod)
 ```
 
