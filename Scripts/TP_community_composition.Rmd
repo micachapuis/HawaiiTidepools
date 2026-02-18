@@ -318,6 +318,49 @@ comm_comp_summary <- as.data.frame(comm_comp_summary) %>%
                                total_non_calcifying_pcover = non_calcifying_pcover + inv_non_calcifying_pcover)
 ```
 
+```{r}
+comm_comp_summary_long <- comm_comp_summary %>%
+  pivot_longer(
+    cols = c("total_producer_pcover":"total_non_calcifying_pcover"),
+    names_to = "category",
+    values_to = "pcover")
+```
+
+
+```{r}
+comm_comp_summary_long %>%
+  filter((!pool_number %in% c(27, 30)) & (category %in% c("total_producer_pcover", "total_non_producer_pcover"))) %>%
+  ggplot(aes(x= factor(pool_number),
+               y = pcover, 
+               fill= factor(category), 
+               color= category)) + # set lines surrounding each color to match the fill colors
+      geom_bar(stat="identity", position="fill") + # stacked bars
+      facet_wrap(~substrate, scales = "free_x") +
+  
+      labs(x = "Pool", # labels
+           y="Relative Abundance",
+           fill = "Category")  +
+  
+      guides(color = "none")  + # keep only legend for fill since fill and color are the same
+      theme_minimal() 
+```
+```{r}
+comm_comp_summary_long %>%
+  filter((!pool_number %in% c(27, 30)) & (category %in% c("total_calcifying_pcover", "total_non_calcifying_pcover"))) %>%
+  ggplot(aes(x= factor(pool_number),
+               y = pcover, 
+               fill= factor(category), 
+               color= category)) + # set lines surrounding each color to match the fill colors
+      geom_bar(stat="identity", position="fill") + # stacked bars
+      facet_wrap(~substrate, scales = "free_x") +
+  
+      labs(x = "Pool", # labels
+           y="Relative Abundance",
+           fill = "Category")  +
+  
+      guides(color = "none")  + # keep only legend for fill since fill and color are the same
+      theme_minimal() 
+```
 
 ```{r}
 write.csv(comm_comp_summary, here("Data", "comm_comp_summary.csv"))
