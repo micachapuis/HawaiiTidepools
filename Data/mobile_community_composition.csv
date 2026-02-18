@@ -1,4 +1,4 @@
-date,site,water_date,substrate,pool_number,hermit_crab_large,hermit_crab_small,shore_crab,crab_other,snail_large,snail_small,cowrie,seahare,exaiptasia_diaphana,bivalve,zoanthid,fish_1cm,fish_2cm,fish_3cm,fish_greater_4cm,eel,holothuria_atra,holothuria_cinerascens,actinopyga_varians,holothuria_pervicax,sea_cucumber,echinometra_oblonga,echinometra_mathaei,jellyfish_small,shrimp,notes,observers
+date,site,water_date,substrate,pool_number,hermit_crab_large,hermit_crab_small,rock_crab,crab_other,snail_large,snail_small,cowrie,seahare,exaiptasia_diaphana,bivalve,zoanthid,fish_1cm,fish_2cm,fish_3cm,fish_greater_4cm,eel,holothuria_atra,holothuria_cinerascens,actinopyga_varians,holothuria_pervicax,sea_cucumber,echinometra_oblonga,echinometra_mathaei,jellyfish_small,shrimp,notes,observers
 2025/06/09,Kaihalulu Beach,2025/06/08,limestone,15,158,0,0,0,40,0,0,0,0,0,0,1,0,2,5,0,0,0,0,0,0,0,0,0,0,"fish blennies, large one 5cm",Haley
 2025/06/09,Kaihalulu Beach,2025/06/08,limestone,14,4,0,6,0,10,0,2,0,2,0,0,0,0,0,1,0,1,1,0,0,1,2,2,0,1,fish manini 5cm,Haley
 2025/06/09,Kaihalulu Beach,2025/06/08,limestone,13,43,0,0,0,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,Haley
@@ -90,17 +90,17 @@ date,site,water_date,substrate,pool_number,hermit_crab_large,hermit_crab_small,s
 2025/08/06,Kaihalulu Beach,2025/07/26,limestone,14,0,2,0,0,0,0,1,0,5,0,0,0,0,0,0,0,2,0,0,0,0,2,3,0,0,,"Bowen, Mj"
 2025/08/06,Kaihalulu Beach,2025/07/26,limestone,15,9,11,0,0,2,6,0,0,6,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,,"Bowen, Mj"
 2025/11/02,Sandy Beach,2025/11/05,basalt,16,2,0,0,0,0,32,0,0,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,Josh
-2025/11/02,Sandy Beach,2025/11/05,basalt,17,2,1,0,0,0,25,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,18,13,1,0,0,1,52,0,0,2,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,19,45,6,0,0,8,4,0,0,11,2,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,20,6,0,0,0,0,4,0,0,46,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,21,4,0,0,0,0,0,0,0,0,7,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,22,17,0,0,0,38,0,0,0,2,5,0,2,3,2,1,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,23,13,0,0,0,69,0,0,0,26,20,0,7,4,1,2,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,24,0,0,2,0,1,1,0,0,1,0,3,0,0,0,1,0,0,0,0,1,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,25,2,0,0,0,12,0,0,0,0,4,0,5,2,1,0,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,26,3,0,0,0,4,0,0,0,0,0,0,2,2,3,2,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,28,1,0,0,0,3,0,0,0,0,1,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,29,7,0,0,0,2,0,0,0,0,7,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,,
-2025/11/02,Sandy Beach,2025/11/05,basalt,31,2,0,0,0,0,411,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"snails not super tiny, kind of medium sized",
-2025/11/02,Sandy Beach,2025/11/05,basalt,32,10,0,1,0,42,0,0,0,47,4,0,9,4,2,4,0,0,0,0,0,0,0,0,0,0,,
+2025/11/02,Sandy Beach,2025/11/05,basalt,17,2,1,0,0,0,25,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,18,13,1,0,0,1,52,0,0,2,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,19,45,6,0,0,8,4,0,0,11,2,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,20,6,0,0,0,0,4,0,0,46,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,21,4,0,0,0,0,0,0,0,0,7,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,22,17,0,0,0,38,0,0,0,2,5,0,2,3,2,1,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,23,13,0,0,0,69,0,0,0,26,20,0,7,4,1,2,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,24,0,0,2,0,1,1,0,0,1,0,3,0,0,0,1,0,0,0,0,1,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,25,2,0,0,0,12,0,0,0,0,4,0,5,2,1,0,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,26,3,0,0,0,4,0,0,0,0,0,0,2,2,3,2,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,28,1,0,0,0,3,0,0,0,0,1,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,29,7,0,0,0,2,0,0,0,0,7,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,,Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,31,2,0,0,0,0,411,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"snails not super tiny, kind of medium sized",Josh
+2025/11/02,Sandy Beach,2025/11/05,basalt,32,10,0,1,0,42,0,0,0,47,4,0,9,4,2,4,0,0,0,0,0,0,0,0,0,0,,Josh

@@ -228,7 +228,7 @@ mobile$month <- month(mobile$date, label = TRUE)
 
 ```{r}
 mobile_long <- mobile %>%
-  select(-c("notes.x":"perimeter_m", "depth":"notes.y")) %>%
+  select(-c("notes.x":"perimeter_m", "max_depth_m":"notes.y")) %>%
   pivot_longer(
     cols = c("hermit_crab_large":"shrimp"),
     names_to = "id",
@@ -237,69 +237,70 @@ mobile_long <- mobile %>%
 
 Assign species to broader categories by joining with other datasheet
 ```{r}
-mobile_categories <- left_join(mobile_long, categories)
+mobile_categories <- left_join(mobile_long, categories, by = "id")
 ```
 
-Calculate density
+Calculate mobile percent cover
 ```{r}
-mobile_categories_density <- mobile_categories %>%
-                             mutate(density = (count/surface_area_m2)) %>%
-                             select(-c(count, id, surface_area_m2)) %>%
+mobile_categories_pcover <- mobile_categories %>%
+                             mutate(pcover = ((count*surface_area_m2)/pool_surface_area_m2)*100) %>%
+                             select(-c(count, id, pool_surface_area_m2, avg_diameter_or_length_cm:surface_area_m2, production, calcification)) %>%
                              group_by(date, site, water_date, pool_number, substrate, category, category_name) %>%
-                             mutate(density = sum(density)) %>%
-                             distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+                             mutate(cat_percent_cover = sum(pcover)) %>%
+                             select(-pcover) %>%
+                             distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # only one row per category per pool
 ```
 
 Mobile Calcifiers
 ```{r}
 mobile_calcifiers <- mobile_categories %>%
-                        mutate(density = (count/surface_area_m2)) %>%
-                        select(-c(count, id, surface_area_m2, category, category_name, production)) %>%
+                        mutate(pcover = ((count*surface_area_m2)/pool_surface_area_m2)*100) %>%
+                        select(-c(count, id, pool_surface_area_m2, avg_diameter_or_length_cm:surface_area_m2, category, category_name, production)) %>%
                         group_by(date, site, water_date, pool_number, substrate, calcification) %>%
-                        mutate(calc_density = sum(density)) %>%
-                       distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+                        mutate(calc_percent_cover = sum(pcover)) %>%
+                        select(-pcover) %>%
+                        distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
 ```
 
 ```{r}
 mobile_calc_wide <- mobile_calcifiers %>%
-  select(!density) %>%
   pivot_wider(
     names_from = calcification,
-    values_from = calc_density) %>%
-  rename("calcifying_density" = "calcifying",
-         "non_calcifying_density" = "non-calcifying")
+    values_from = calc_percent_cover) %>%
+  rename("inv_calcifying_pcover" = "calcifying",
+         "inv_non_calcifying_pcover" = "non-calcifying")
 ```
 
 Mobile Producers 
 ```{r}
 mobile_producers <- mobile_categories %>%
-                      mutate(density = (count/surface_area_m2)) %>%
-                      select(-c(count, id, surface_area_m2, category, category_name, calcification)) %>%
-                      group_by(date, site, water_date, pool_number, substrate, production) %>%
-                      mutate(prod_density = sum(density)) %>%
-                      distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+                        mutate(pcover = ((count*surface_area_m2)/pool_surface_area_m2)*100) %>%
+                        select(-c(count, id, pool_surface_area_m2, avg_diameter_or_length_cm:surface_area_m2, category, category_name, calcification)) %>%
+                        group_by(date, site, water_date, pool_number, substrate, production) %>%
+                        mutate(prod_percent_cover = sum(pcover)) %>%
+                        select(-pcover) %>%
+                        distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
 ```
 
 ```{r}
 mobile_prod_wide <- mobile_producers %>%
-  select(!density) %>%
   pivot_wider(
     names_from = production,
-    values_from = prod_density) %>%
-  rename("producer_density" = "producer",
-         "non_producer_density" = "non-producer")
+    values_from = prod_percent_cover) %>%
+  rename("inv_producer_pcover" = "producer",
+         "inv_non_producer_pcover" = "non-producer")
 ```
 
 
 
 ```{r}
-mobile_categories_density %>% 
+mobile_categories_pcover %>% 
   filter(!pool_number %in% c(27,30)) %>%
   ggplot(aes(x = factor(pool_number),
-             y = log(density), 
-             fill = category, 
-             color = category)) +
-  geom_bar(stat = "identity") +
+             y = cat_percent_cover, 
+             fill = category_name, 
+             color = category_name)) +
+  geom_bar(stat = "identity", position = "fill") +
   facet_grid(month~substrate, scale = "free_x") 
 ```
 
@@ -309,8 +310,16 @@ Community Composition Summary (Producer and Calcifier percent cover and density 
 comm_comp_summary <- list(benthic_prod_wide, benthic_calc_wide, mobile_prod_wide, mobile_calc_wide) %>% reduce(left_join)
 
 comm_comp_summary <- as.data.frame(comm_comp_summary) %>%
-                        select(-date) %>%
-                        rename("date" = "water_date")
+                        select(-c(date, avg_diameter_or_length_cm:surface_area_m2)) %>%
+                        rename("date" = "water_date") %>% 
+                        mutate(total_producer_pcover = producer_pcover + inv_producer_pcover,
+                               total_non_producer_pcover = non_producer_pcover + inv_non_producer_pcover,
+                               total_calcifying_pcover = calcifying_pcover + inv_calcifying_pcover,
+                               total_non_calcifying_pcover = non_calcifying_pcover + inv_non_calcifying_pcover)
+```
 
+
+```{r}
 write.csv(comm_comp_summary, here("Data", "comm_comp_summary.csv"))
+
 ```

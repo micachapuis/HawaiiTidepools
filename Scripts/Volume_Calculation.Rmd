@@ -31,20 +31,21 @@ curve_reps <- curve %>%
 ```
 
 ```{r}
-curve_reps %>% # this is the dataframe
+curve %>% # this is the dataframe
   group_by(dye_volume_ml) %>% # grouping by dye volume
-  ggplot(aes(x= replicate_absorbance, y= water_volume_l))+   # setup plot with x and y data
+  ggplot(aes(x= calculated_absorbance, y= water_volume_l))+   # setup plot with x and y data
   geom_line() + # adding lines
+  geom_point() +
   facet_wrap(~dye_volume_ml) # dividing plots by dye volume 
 ```
 
 Write a power function for each curve
 ```{r}
-pool_coefs <- curve_reps %>%
+pool_coefs <- curve %>%
               group_by(dye_volume_ml) %>% #grouping by  dye volume
               nest()%>% # nest everything by dye volume
               mutate( # mutate the dataframe
-                fit = map(data,~nls(water_volume_l~b*replicate_absorbance^z, start = list(b=-1, z=-1), data = .)), # run the regression model
+                fit = map(data,~nls(water_volume_l~b*calculated_absorbance^z, start = list(b=-1, z=-1), data = .)), # run the regression model
                 tidied = map(fit,tidy)) %>% # make it clean 
               unnest(tidied) %>% # unnest the data so that it is a dataframe again
               select(c(dye_volume_ml, term, estimate)) %>% # only select the parameters that we want
@@ -80,29 +81,29 @@ ggsave(here("Data", "Volume", "DyeStandardCurves.png"), device = 'png',width = 9
 
 ## Now Calculate Pool Volumes
 
-Take the average absorbance for each technical replicate
-```{r}
-# average the technical replicate absorbances to get one absorbance value per replicate (3 values per pool)
-tp_absorbance_reps <- tp_absorbance %>%
-                      group_by(pool_number, replicate, dye_volume_ml) %>%
-                      summarise(replicate_absorbance = mean(calculated_absorbance, na.rm = TRUE))
-```
-
-
-
 Join the data and calculate pool volume, then take   
 The formula is A=bV^z, where A is absorbance and V is volume  
 We are using V = (A / b)^(1/z)  
 ```{r}
-volume_calc <- tp_absorbance_reps %>%
+volume_calc <- tp_absorbance %>%
               left_join(pool_coefs, by = "dye_volume_ml") %>%
-              mutate(pool_volume = (replicate_absorbance / b)^(1 / z))
+              mutate(pool_volume = ((calculated_absorbance / b)^(1 / z)))
+# gives 9 volumes per pool
 ```
 
 
+Average the technical triplicate volumes
+```{r}
+# average the technical triplicate volume to get one volume per replicate (3 values per pool)
+volume_calc_reps <- volume_calc %>%
+                    group_by(pool_number, replicate) %>%
+                    summarise(pool_volume = mean(pool_volume, na.rm = TRUE))
+```
+
 Average the replicate volumes for each tidepool and calculate SD and SE
 ```{r}
-pool_volumes <- volume_calc %>%
+# get one volume per tidepool + SD/SE
+pool_volumes <- volume_calc_reps %>%
                   group_by(pool_number) %>%
                   summarise(
                      mean_volume = mean(pool_volume, na.rm = TRUE),
@@ -112,6 +113,6 @@ pool_volumes <- volume_calc %>%
 
 
 ```{r}
-#write_csv(pool_volumes, here("Data", "pool_volumes.csv"))
+write_csv(pool_volumes, here("Data", "pool_volumes.csv"))
 ```
 
