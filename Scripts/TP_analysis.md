@@ -109,7 +109,7 @@ data <- left_join(data, pHSlope)
     ## Joining with `by = join_by(sample_ID, date)`
 
 ``` r
-data <- left_join(data, (params %>% select(site, pool_number, substrate, perimeter_m, surface_area_m2)), by = c("site", "pool_number"))
+data <- left_join(data, (params %>% select(site, pool_number, substrate, perimeter_m, pool_surface_area_m2)), by = c("site", "pool_number"))
 data <- left_join(data, pool_volumes)
 ```
 
@@ -172,6 +172,12 @@ data <- bind_rows(data, testdata)
 
     ## New names:
     ## • `...1` -> `...30`
+
+Remove Pools 1 and 17
+
+``` r
+data <- data %>% filter(!(pool_number %in% c(1, 17)))
+```
 
 Calculate DIC using seacarb
 
@@ -347,9 +353,9 @@ Calculate Delta TA and Delta DIC between two consecutive timepoints
 ``` r
 deltas <- data %>%
   
-  select(date, site, pool_number, substrate, surface_area_m2, mean_wind_speed, pool_volume, time_point, sample_time, temp_pool, pH, TA_norm, DIC_norm, FCO2, dissolved_oxygen, OmegaAragonite) %>%
+  select(date, site, pool_number, substrate, pool_surface_area_m2, mean_wind_speed, pool_volume, time_point, sample_time, temp_pool, pH, TA_norm, DIC_norm, FCO2, dissolved_oxygen, OmegaAragonite) %>%
   
-  group_by(date, site, pool_number, substrate, surface_area_m2) %>%
+  group_by(date, site, pool_number, substrate, pool_surface_area_m2) %>%
   
   arrange(time_point, .by_group = TRUE) %>%
   
@@ -401,7 +407,7 @@ Calculate NEC
 
 ``` r
 deltas <- deltas %>% 
-  mutate(NEC = ((-1)*(delta_TA/2)*1025*(mean_vol/surface_area_m2)*(1/delta_time))/100)
+  mutate(NEC = ((-1)*(delta_TA/2)*1025*(mean_vol/pool_surface_area_m2)*(1/delta_time))/100)
 
 # NEC = (-1) * (delta TA/2 * density * volume/surface area) * (1 / delta time) / 100
 
@@ -419,7 +425,7 @@ Calculate NEP
 
 ``` r
 deltas <- deltas %>% 
-  mutate(NEP = (((-delta_DIC)*1025*(mean_vol/surface_area_m2)*(1/delta_time))/100) - NEC + mean_FCO2)
+  mutate(NEP = (((-delta_DIC)*1025*(mean_vol/pool_surface_area_m2)*(1/delta_time))/100) - NEC + mean_FCO2)
 
 # NEP = ((delta DIC * density * volume/surface area) * (1 / delta time)) - NEC - FCO2
 
@@ -433,6 +439,12 @@ deltas <- deltas %>%
 #(the equation is - fugosity, but because it is time 2-1 it is plus here)
 ```
 
+Join community comp summary to deltas data
+
+``` r
+deltas <- left_join(deltas, community_comp, by = c("pool_number", "date", "site", "substrate"))
+```
+
 ## Data Viz
 
 ``` r
@@ -440,7 +452,7 @@ deltas <- deltas %>%
 plot(data$salinity_pool, data$salinity_lab)
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 ### Pool Temperature
 
@@ -449,14 +461,14 @@ data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y =
   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature") + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = temp_pool, color = pool_number)) +
   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Pool Temperature") + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
@@ -465,7 +477,7 @@ data %>% ggplot(aes(x = sample_time, y = temp_pool)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
 Shift times so 6:30 am is the new start time
 
@@ -513,7 +525,7 @@ data %>% ggplot(aes(x = time_shift, y = temp_pool, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "temp_over_time.png"), width = 8, height = 6)
@@ -527,19 +539,19 @@ ggsave(here("Output", "temp_over_time.png"), width = 8, height = 6)
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = salinity_pool, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (pool)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = salinity_pool, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "Salinity (pool)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-    ## Warning: Removed 55 rows containing missing values or values outside the scale range
+    ## Warning: Removed 44 rows containing missing values or values outside the scale range
     ## (`geom_line()`).
 
-    ## Warning: Removed 66 rows containing missing values or values outside the scale range
+    ## Warning: Removed 55 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
@@ -548,7 +560,7 @@ data %>% ggplot(aes(x = sample_time, y = salinity_field)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-43-1.png)<!-- --> \####
+![](TP_analysis_files/figure-gfm/unnamed-chunk-45-1.png)<!-- --> \####
 Salinity over time
 
 ``` r
@@ -574,7 +586,7 @@ data %>% ggplot(aes(x = time_shift, y = salinity_field, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-46-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "salinity_over_time.png"), width = 8, height = 6)
@@ -589,28 +601,28 @@ data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y =
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-45-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-47-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = pH, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-46-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = pH_probe, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (probe)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-47-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = pH_probe, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (probe)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-50-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH)) +
@@ -619,7 +631,7 @@ data %>% ggplot(aes(x = sample_time, y = pH)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
@@ -671,7 +683,7 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
     ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
     ## -Inf
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-50-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
@@ -686,7 +698,7 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-53-1.png)<!-- -->
 
 #### pH (not temperature normalized)
 
@@ -714,7 +726,7 @@ data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "pH_over_time.png"), width = 8, height = 6)
@@ -754,7 +766,7 @@ data %>% ggplot(aes(x = time_shift, y = (pH*temp_field)/(mean(data$temp_field)),
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-53-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "pH_over_time_temp_normalized.png"), width = 8, height = 6)
@@ -806,7 +818,7 @@ data %>% ggplot(aes(x = time_shift, y = (((pH*temp_field)/(mean(data$temp_field)
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-56-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "pH_over_time_temp_sal_normalized.png"), width = 8, height = 6)
@@ -852,7 +864,7 @@ data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
 
 ``` r
 #ggsave(here("Output", "pH_over_time.png"), width = 6, height = 2)
@@ -864,13 +876,13 @@ data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-56-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-58-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = TA_norm, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "TA normalized")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-59-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
@@ -884,7 +896,7 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-58-1.png)<!-- --> \####
+![](TP_analysis_files/figure-gfm/unnamed-chunk-60-1.png)<!-- --> \####
 TA (Salinity Normalized)
 
 ``` r
@@ -912,7 +924,7 @@ data %>% ggplot(aes(x = time_shift, y = TA_norm, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-59-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-61-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "TA_over_time_sal_normalized.png"), width = 8, height = 6)
@@ -948,7 +960,7 @@ data %>% ggplot(aes(x = time_shift, y = TA, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-60-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-62-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "TA_over_time.png"), width = 8, height = 6)
@@ -971,7 +983,7 @@ data %>% ggplot(aes(x = sample_time, y = TA, color = substrate)) +
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-61-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
 
 ### O2
 
@@ -979,19 +991,19 @@ data %>% ggplot(aes(x = sample_time, y = TA, color = substrate)) +
 data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) + facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-62-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-64-1.png)<!-- -->
 
 ``` r
 data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = dissolved_oxygen, color = pool_number)) +   facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "DO")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
-    ## Warning: Removed 55 rows containing missing values or values outside the scale range
+    ## Warning: Removed 44 rows containing missing values or values outside the scale range
     ## (`geom_line()`).
 
-    ## Warning: Removed 66 rows containing missing values or values outside the scale range
+    ## Warning: Removed 55 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-65-1.png)<!-- -->
 
 ``` r
 data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
@@ -1005,13 +1017,13 @@ data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 117 rows containing non-finite outside the scale range
+    ## Warning: Removed 106 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 117 rows containing missing values or values outside the scale range
+    ## Warning: Removed 106 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-64-1.png)<!-- --> \####
+![](TP_analysis_files/figure-gfm/unnamed-chunk-66-1.png)<!-- --> \####
 DO over time
 
 ``` r
@@ -1037,13 +1049,13 @@ data %>% ggplot(aes(x = time_shift, y = dissolved_oxygen, color = substrate)) +
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 117 rows containing non-finite outside the scale range
+    ## Warning: Removed 106 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 117 rows containing missing values or values outside the scale range
+    ## Warning: Removed 106 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-65-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-67-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "oxygen_over_time.png"), width = 8, height = 6)  
@@ -1051,9 +1063,9 @@ ggsave(here("Output", "oxygen_over_time.png"), width = 8, height = 6)
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 117 rows containing non-finite outside the scale range
+    ## Warning: Removed 106 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
-    ## Removed 117 rows containing missing values or values outside the scale range
+    ## Removed 106 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
 #### O2 Sat
@@ -1081,17 +1093,17 @@ data %>% ggplot(aes(x = time_shift, y = percent_saturation, color = substrate)) 
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 165 rows containing non-finite outside the scale range
+    ## Warning: Removed 151 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
     ## Warning: Failed to fit group 3.
     ## Caused by error in `smooth.construct.cr.smooth.spec()`:
     ## ! x has insufficient unique values to support 10 knots: reduce k.
 
-    ## Warning: Removed 165 rows containing missing values or values outside the scale range
+    ## Warning: Removed 151 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-66-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-68-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "oxygen_sat_over_time.png"), width = 8, height = 6)  
@@ -1099,14 +1111,14 @@ ggsave(here("Output", "oxygen_sat_over_time.png"), width = 8, height = 6)
 
     ## `geom_smooth()` using formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 165 rows containing non-finite outside the scale range
+    ## Warning: Removed 151 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
     ## Warning: Failed to fit group 3.
     ## Caused by error in `smooth.construct.cr.smooth.spec()`:
     ## ! x has insufficient unique values to support 10 knots: reduce k.
 
-    ## Warning: Removed 165 rows containing missing values or values outside the scale range
+    ## Warning: Removed 151 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
 ### Deltas
@@ -1123,13 +1135,13 @@ deltas %>% ggplot(aes(x = substrate, y = delta_pH_norm, color = substrate)) + #,
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-    ## Warning: Removed 22 rows containing non-finite outside the scale range
+    ## Warning: Removed 20 rows containing non-finite outside the scale range
     ## (`stat_boxplot()`).
 
-    ## Warning: Removed 22 rows containing missing values or values outside the scale range
+    ## Warning: Removed 20 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-67-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-69-1.png)<!-- -->
 
 ``` r
 deltas %>% ggplot(aes(x = substrate, y = delta_TA_norm, color = substrate)) + #, label = pool_number)) + 
@@ -1143,13 +1155,13 @@ deltas %>% ggplot(aes(x = substrate, y = delta_TA_norm, color = substrate)) + #,
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
 ```
 
-    ## Warning: Removed 22 rows containing non-finite outside the scale range
+    ## Warning: Removed 20 rows containing non-finite outside the scale range
     ## (`stat_boxplot()`).
 
-    ## Warning: Removed 22 rows containing missing values or values outside the scale range
+    ## Warning: Removed 20 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-68-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-70-1.png)<!-- -->
 
 ### Delta TA vs Delta pH
 
@@ -1175,13 +1187,13 @@ deltas %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 22 rows containing non-finite outside the scale range
+    ## Warning: Removed 20 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 22 rows containing missing values or values outside the scale range
+    ## Warning: Removed 20 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-69-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-71-1.png)<!-- -->
 
 ``` r
 #ggsave(here("Output", "delta_TA_vs_delta_pH.png"), width = 4, height = 8)
@@ -1218,13 +1230,13 @@ deltas %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 20 rows containing non-finite outside the scale range
+    ## Warning: Removed 18 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 20 rows containing missing values or values outside the scale range
+    ## Warning: Removed 18 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-70-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-72-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "delta_TA_vs_delta_pH_onepanel.png"), width = 4, height = 4)
@@ -1232,9 +1244,9 @@ ggsave(here("Output", "delta_TA_vs_delta_pH_onepanel.png"), width = 4, height = 
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 20 rows containing non-finite outside the scale range
+    ## Warning: Removed 18 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
-    ## Removed 20 rows containing missing values or values outside the scale range
+    ## Removed 18 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
 ``` r
@@ -1251,7 +1263,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-71-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-73-1.png)<!-- -->
 
 ``` r
 # committee meeting figure
@@ -1268,13 +1280,13 @@ deltas %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 20 rows containing non-finite outside the scale range
+    ## Warning: Removed 18 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 20 rows containing missing values or values outside the scale range
+    ## Warning: Removed 18 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-72-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-74-1.png)<!-- -->
 
 #### Delta DIC vs Delta pH (Time Normalized)
 
@@ -1303,13 +1315,13 @@ deltas %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 20 rows containing non-finite outside the scale range
+    ## Warning: Removed 18 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 20 rows containing missing values or values outside the scale range
+    ## Warning: Removed 18 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-73-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-75-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "delta_DIC_vs_delta_pH_onepanel.png"), width = 4, height = 4)
@@ -1317,9 +1329,9 @@ ggsave(here("Output", "delta_DIC_vs_delta_pH_onepanel.png"), width = 4, height =
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 20 rows containing non-finite outside the scale range
+    ## Warning: Removed 18 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
-    ## Removed 20 rows containing missing values or values outside the scale range
+    ## Removed 18 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
 ------------------------------------------------------------------------
@@ -1327,21 +1339,17 @@ ggsave(here("Output", "delta_DIC_vs_delta_pH_onepanel.png"), width = 4, height =
 Pool 1 salinity lab vs TA reg
 
 ``` r
-data %>% 
-  filter(!substrate %in% c("ocean", "basalt")) %>% 
-  filter(pool_number == 1) %>%
-  ggplot(aes(x = salinity_pool, y = TA)) + 
-  geom_point(size = 2, alpha = 0.7) + 
-  geom_smooth(method = "lm") + 
-  facet_wrap(~substrate, 
-               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
-  theme_bw() + 
-  labs(x = "Pool Salinity", y = "Reg Total Alkalinity") 
+#data %>% 
+#  filter(!substrate %in% c("ocean", "basalt")) %>% 
+#  filter(pool_number == 1) %>%
+#  ggplot(aes(x = salinity_pool, y = TA)) + 
+#  geom_point(size = 2, alpha = 0.7) + 
+#  geom_smooth(method = "lm") + 
+#  facet_wrap(~substrate, 
+#               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+#  theme_bw() + 
+#  labs(x = "Pool Salinity", y = "Reg Total Alkalinity") 
 ```
-
-    ## `geom_smooth()` using formula = 'y ~ x'
-
-![](TP_analysis_files/figure-gfm/unnamed-chunk-74-1.png)<!-- -->
 
 ### Salinity vs temp
 
@@ -1358,7 +1366,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-75-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-77-1.png)<!-- -->
 
 ### DO and pH
 
@@ -1376,13 +1384,13 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 117 rows containing non-finite outside the scale range
+    ## Warning: Removed 106 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 117 rows containing missing values or values outside the scale range
+    ## Warning: Removed 106 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-76-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-78-1.png)<!-- -->
 
 #### Delta pH vs Delta O2 (Time Normalized)
 
@@ -1414,13 +1422,13 @@ deltas %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 83 rows containing non-finite outside the scale range
+    ## Warning: Removed 74 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 83 rows containing missing values or values outside the scale range
+    ## Warning: Removed 74 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-77-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-79-1.png)<!-- -->
 
 ``` r
 # Time normalized delta ph vs delta o2
@@ -1447,13 +1455,30 @@ deltas %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 83 rows containing non-finite outside the scale range
+    ## Warning: Removed 74 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 83 rows containing missing values or values outside the scale range
+    ## Warning: Removed 74 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-78-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-80-1.png)<!-- -->
+
+``` r
+deltas %>% 
+  ggplot(aes(x = delta_DIC_norm, y = delta_O2_norm)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+    ## Warning: Removed 89 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 89 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-81-1.png)<!-- -->
 
 ### TA/DIC Plot
 
@@ -1473,7 +1498,7 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-79-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-82-1.png)<!-- -->
 
 ### NEC + NEP
 
@@ -1490,13 +1515,13 @@ deltas %>% ggplot(aes(x = delta_pH, y = NEC)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 115 rows containing non-finite outside the scale range
+    ## Warning: Removed 100 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 115 rows containing missing values or values outside the scale range
+    ## Warning: Removed 100 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-80-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-83-1.png)<!-- -->
 
 ``` r
 deltas %>% ggplot(aes(x = mean_pH, y = NEC)) + 
@@ -1510,13 +1535,13 @@ deltas %>% ggplot(aes(x = mean_pH, y = NEC)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 115 rows containing non-finite outside the scale range
+    ## Warning: Removed 100 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 115 rows containing missing values or values outside the scale range
+    ## Warning: Removed 100 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-81-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-84-1.png)<!-- -->
 
 #### Delta pH vs NEC
 
@@ -1543,13 +1568,13 @@ deltas %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 93 rows containing non-finite outside the scale range
+    ## Warning: Removed 78 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 93 rows containing missing values or values outside the scale range
+    ## Warning: Removed 78 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-82-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-85-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "delta_pH_vs_NEC.png"), width = 8, height = 6)
@@ -1557,9 +1582,9 @@ ggsave(here("Output", "delta_pH_vs_NEC.png"), width = 8, height = 6)
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 93 rows containing non-finite outside the scale range
+    ## Warning: Removed 78 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
-    ## Removed 93 rows containing missing values or values outside the scale range
+    ## Removed 78 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
 ``` r
@@ -1575,13 +1600,13 @@ deltas %>% ggplot(aes(x = NEP, y = delta_pH)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 115 rows containing non-finite outside the scale range
+    ## Warning: Removed 100 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 115 rows containing missing values or values outside the scale range
+    ## Warning: Removed 100 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-83-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-86-1.png)<!-- -->
 
 ``` r
 deltas %>% ggplot(aes(x = NEP, y = mean_pH)) + 
@@ -1595,13 +1620,13 @@ deltas %>% ggplot(aes(x = NEP, y = mean_pH)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 115 rows containing non-finite outside the scale range
+    ## Warning: Removed 100 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 115 rows containing missing values or values outside the scale range
+    ## Warning: Removed 100 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-84-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-87-1.png)<!-- -->
 
 #### NEP vs Delta pH
 
@@ -1628,13 +1653,13 @@ deltas %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 93 rows containing non-finite outside the scale range
+    ## Warning: Removed 78 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 93 rows containing missing values or values outside the scale range
+    ## Warning: Removed 78 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-85-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-88-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "NEP_vs_delta_pH.png"), width = 8, height = 6)
@@ -1642,9 +1667,9 @@ ggsave(here("Output", "NEP_vs_delta_pH.png"), width = 8, height = 6)
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 93 rows containing non-finite outside the scale range
+    ## Warning: Removed 78 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
-    ## Removed 93 rows containing missing values or values outside the scale range
+    ## Removed 78 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
 #### NEP / NEC
@@ -1663,13 +1688,13 @@ deltas %>% ggplot(aes(x = NEP, y = NEC)) +
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 115 rows containing non-finite outside the scale range
+    ## Warning: Removed 100 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 115 rows containing missing values or values outside the scale range
+    ## Warning: Removed 100 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-86-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-89-1.png)<!-- -->
 
 ``` r
 deltas %>% 
@@ -1693,13 +1718,13 @@ deltas %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 93 rows containing non-finite outside the scale range
+    ## Warning: Removed 78 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 93 rows containing missing values or values outside the scale range
+    ## Warning: Removed 78 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-87-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-90-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "NEP_vs_NEC.png"), width = 8, height = 6)
@@ -1707,9 +1732,9 @@ ggsave(here("Output", "NEP_vs_NEC.png"), width = 8, height = 6)
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 93 rows containing non-finite outside the scale range
+    ## Warning: Removed 78 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
-    ## Removed 93 rows containing missing values or values outside the scale range
+    ## Removed 78 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
 ### Aragonite Saturation State
@@ -1728,7 +1753,7 @@ data %>% #filter(!substrate %in% "ocean") %>%
   theme_bw()
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-88-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-91-1.png)<!-- -->
 
 ``` r
 #ggsave(here("Output", "OmegaArag_vs_pH.png"), width = 8, height = 4)
@@ -1750,7 +1775,7 @@ data %>% #filter(!substrate %in% "ocean") %>%
   scale_color_manual(labels = c("Basalt", "Limestone", "Ocean"), values = c("#F8766D", "#00BA38", "#619CFF"))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-89-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-92-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "OmegaArag_vs_pH.png"), width = 6, height = 4)
@@ -1764,11 +1789,11 @@ Anova(arag_ph_mod)
     ## Anova Table (Type II tests)
     ## 
     ## Response: OmegaAragonite
-    ##               Sum Sq  Df F value    Pr(>F)    
-    ## pH           1279.29   1 985.499 < 2.2e-16 ***
-    ## substrate      75.68   2  29.151 2.982e-12 ***
-    ## pH:substrate   69.68   2  26.840 2.062e-11 ***
-    ## Residuals     372.56 287                      
+    ##               Sum Sq  Df   F value    Pr(>F)    
+    ## pH           1097.75   1 2176.1522 < 2.2e-16 ***
+    ## substrate      31.61   2   31.3295 6.118e-13 ***
+    ## pH:substrate    9.22   2    9.1361 0.0001456 ***
+    ## Residuals     133.68 265                        
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1782,22 +1807,22 @@ summary(arag_ph_mod)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -5.9793 -0.3526 -0.0700  0.2458  8.4781 
+    ## -2.6103 -0.2936 -0.0682  0.1248  4.2281 
     ## 
     ## Coefficients:
-    ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)           -36.9795     2.1615 -17.108  < 2e-16 ***
-    ## pH                      5.0630     0.2613  19.375  < 2e-16 ***
-    ## substratelimestone    -23.4374     3.3484  -6.999 1.82e-11 ***
-    ## substrateocean         -6.3089    15.5933  -0.405    0.686    
-    ## pH:substratelimestone   2.9971     0.4093   7.323 2.46e-12 ***
-    ## pH:substrateocean       0.7440     1.9410   0.383    0.702    
+    ##                        Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)           -42.84253    1.48288 -28.891  < 2e-16 ***
+    ## pH                      5.78559    0.17950  32.231  < 2e-16 ***
+    ## substratelimestone     -8.82771    2.23488  -3.950   0.0001 ***
+    ## substrateocean         -0.44585    9.74018  -0.046   0.9635    
+    ## pH:substratelimestone   1.16472    0.27366   4.256 2.89e-05 ***
+    ## pH:substrateocean       0.02143    1.21232   0.018   0.9859    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.139 on 287 degrees of freedom
-    ## Multiple R-squared:  0.7919, Adjusted R-squared:  0.7883 
-    ## F-statistic: 218.4 on 5 and 287 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 0.7102 on 265 degrees of freedom
+    ## Multiple R-squared:  0.8975, Adjusted R-squared:  0.8956 
+    ## F-statistic:   464 on 5 and 265 DF,  p-value: < 2.2e-16
 
 ``` r
 data %>% #filter(!substrate %in% "ocean") %>% 
@@ -1813,7 +1838,7 @@ data %>% #filter(!substrate %in% "ocean") %>%
   theme_bw()
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-91-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-94-1.png)<!-- -->
 
 ``` r
 #ggsave(here("Output", "OmegaCalc_vs_pH.png"), width = 8, height = 4)
@@ -1835,7 +1860,7 @@ data %>% #filter(!substrate %in% "ocean") %>%
   scale_color_manual(labels = c("Basalt", "Limestone", "Ocean"), values = c("#F8766D", "#00BA38", "#619CFF"))
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-92-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-95-1.png)<!-- -->
 
 ``` r
 ggsave(here("Output", "OmegaCalc_vs_pH.png"), width = 6, height = 4)
@@ -1849,11 +1874,11 @@ Anova(calc_ph_mod)
     ## Anova Table (Type II tests)
     ## 
     ## Response: OmegaCalcite
-    ##               Sum Sq  Df F value    Pr(>F)    
-    ## pH           2901.82   1 965.875 < 2.2e-16 ***
-    ## substrate     172.20   2  28.659 4.492e-12 ***
-    ## pH:substrate  157.70   2  26.246 3.404e-11 ***
-    ## Residuals     862.25 287                      
+    ##               Sum Sq  Df   F value    Pr(>F)    
+    ## pH           2483.21   1 2119.9711 < 2.2e-16 ***
+    ## substrate      71.01   2   30.3125 1.396e-12 ***
+    ## pH:substrate   20.14   2    8.5985 0.0002409 ***
+    ## Residuals     310.41 265                        
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1867,22 +1892,22 @@ summary(calc_ph_mod)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -9.0187 -0.5091 -0.0772  0.3558 12.7161 
+    ## -4.0753 -0.4516 -0.1223  0.1559  6.4422 
     ## 
     ## Coefficients:
-    ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)           -55.6786     3.2883 -16.932  < 2e-16 ***
-    ## pH                      7.6275     0.3975  19.187  < 2e-16 ***
-    ## substratelimestone    -35.2548     5.0940  -6.921 2.93e-11 ***
-    ## substrateocean         -9.4683    23.7223  -0.399    0.690    
-    ## pH:substratelimestone   4.5087     0.6227   7.241 4.11e-12 ***
-    ## pH:substrateocean       1.1161     2.9529   0.378    0.706    
+    ##                        Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)           -64.49820    2.25966 -28.543  < 2e-16 ***
+    ## pH                      8.71447    0.27353  31.859  < 2e-16 ***
+    ## substratelimestone    -13.03787    3.40557  -3.828 0.000161 ***
+    ## substrateocean         -0.64865   14.84234  -0.044 0.965174    
+    ## pH:substratelimestone   1.72177    0.41701   4.129 4.89e-05 ***
+    ## pH:substrateocean       0.02913    1.84737   0.016 0.987433    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.733 on 287 degrees of freedom
-    ## Multiple R-squared:  0.7886, Adjusted R-squared:  0.7849 
-    ## F-statistic: 214.1 on 5 and 287 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 1.082 on 265 degrees of freedom
+    ## Multiple R-squared:  0.8951, Adjusted R-squared:  0.8931 
+    ## F-statistic: 452.1 on 5 and 265 DF,  p-value: < 2.2e-16
 
 ``` r
 #deltas %>% ggplot(aes(x = delta_aragonite, y = NEC)) + 
@@ -1906,7 +1931,7 @@ data %>%
   theme_bw()
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-95-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-98-1.png)<!-- -->
 
 ``` r
 # M:C is lower in the tidepools than in the ocean
@@ -1923,7 +1948,7 @@ data %>%
   theme_bw()
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-96-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-99-1.png)<!-- -->
 
 ``` r
 # total humics higher in the pools than in the ocean on average
@@ -1943,49 +1968,49 @@ data %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-    ## Warning: Removed 232 rows containing non-finite outside the scale range
+    ## Warning: Removed 212 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 232 rows containing missing values or values outside the scale range
+    ## Warning: Removed 212 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-97-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-100-1.png)<!-- -->
 
 ``` r
   #facet_wrap(~substrate)
 ```
 
-## Residuals Stuff
+## Models
 
-### pH
+### pH Residuals
 
 Fit regression for both substrate types combined
 
 ``` r
-#pH_mod <- lm(((pH*temp_field)/(mean(data$temp_field))) ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
-pH_mod <- lm(pH ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
+pH_mod <- lm(((pH*temp_field)/(mean(data$temp_field))) ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
+#pH_mod <- lm(pH ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
 summary(pH_mod)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = pH ~ sample_time, data = (data %>% filter(!substrate == 
-    ##     "ocean")))
+    ## lm(formula = ((pH * temp_field)/(mean(data$temp_field))) ~ sample_time, 
+    ##     data = (data %>% filter(!substrate == "ocean")))
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -0.63184 -0.22171 -0.01937  0.20005  0.79984 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.4690 -0.6677 -0.2697  0.3574  2.9249 
     ## 
     ## Coefficients:
     ##              Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 7.842e+00  3.538e-02  221.62   <2e-16 ***
-    ## sample_time 9.041e-06  7.687e-07   11.76   <2e-16 ***
+    ## (Intercept) 7.783e+00  1.231e-01  63.212  < 2e-16 ***
+    ## sample_time 9.948e-06  2.678e-06   3.715 0.000253 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2904 on 260 degrees of freedom
-    ## Multiple R-squared:  0.3473, Adjusted R-squared:  0.3448 
-    ## F-statistic: 138.3 on 1 and 260 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 0.9714 on 238 degrees of freedom
+    ## Multiple R-squared:  0.05482,    Adjusted R-squared:  0.05084 
+    ## F-statistic:  13.8 on 1 and 238 DF,  p-value: 0.0002531
 
 ``` r
 data_resid_pH <- augment(pH_mod, (data %>% filter(!substrate == "ocean")))
@@ -1995,7 +2020,7 @@ data_resid_pH <- augment(pH_mod, (data %>% filter(!substrate == "ocean")))
 data_resid_pH %>% ggplot(aes(x = sample_time, y = .resid)) + geom_point() + facet_wrap(~substrate)
 ```
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-100-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-103-1.png)<!-- -->
 
 ``` r
 resid_ph <- lm(.resid ~ substrate, data_resid_pH)
@@ -2007,17 +2032,17 @@ summary(resid_ph)
     ## lm(formula = .resid ~ substrate, data = data_resid_pH)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -0.63838 -0.21856 -0.01521  0.19817  0.79331 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.4484 -0.6470 -0.2724  0.3359  2.9456 
     ## 
     ## Coefficients:
-    ##                     Estimate Std. Error t value Pr(>|t|)
-    ## (Intercept)         0.006534   0.023390   0.279    0.780
-    ## substratelimestone -0.015852   0.036431  -0.435    0.664
+    ##                    Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)        -0.02068    0.08297  -0.249    0.803
+    ## substratelimestone  0.04819    0.12665   0.381    0.704
     ## 
-    ## Residual standard error: 0.2903 on 260 degrees of freedom
-    ## Multiple R-squared:  0.0007277,  Adjusted R-squared:  -0.003116 
-    ## F-statistic: 0.1893 on 1 and 260 DF,  p-value: 0.6638
+    ## Residual standard error: 0.9711 on 238 degrees of freedom
+    ## Multiple R-squared:  0.000608,   Adjusted R-squared:  -0.003591 
+    ## F-statistic: 0.1448 on 1 and 238 DF,  p-value: 0.7039
 
 ``` r
 Anova(resid_ph)
@@ -2026,11 +2051,12 @@ Anova(resid_ph)
     ## Anova Table (Type II tests)
     ## 
     ## Response: .resid
-    ##           Sum Sq  Df F value Pr(>F)
-    ## substrate  0.016   1  0.1893 0.6638
-    ## Residuals 21.906 260
+    ##            Sum Sq  Df F value Pr(>F)
+    ## substrate   0.137   1  0.1448 0.7039
+    ## Residuals 224.464 238
 
 ``` r
+# this uses pH temp normalized
 resid_pH_temp <- lm(.resid ~ temp_field, data_resid_pH)
 summary(resid_pH_temp)
 ```
@@ -2041,18 +2067,18 @@ summary(resid_pH_temp)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.58160 -0.19164 -0.05791  0.19568  0.81884 
+    ## -0.58108 -0.20549 -0.04598  0.19069  0.73590 
     ## 
     ## Coefficients:
     ##              Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) -0.867273   0.172766  -5.020 9.60e-07 ***
-    ## temp_field   0.033305   0.006602   5.045 8.53e-07 ***
+    ## (Intercept) -9.331149   0.167780  -55.62   <2e-16 ***
+    ## temp_field   0.358324   0.006411   55.89   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.2771 on 260 degrees of freedom
-    ## Multiple R-squared:  0.08916,    Adjusted R-squared:  0.08565 
-    ## F-statistic: 25.45 on 1 and 260 DF,  p-value: 8.533e-07
+    ## Residual standard error: 0.2585 on 238 degrees of freedom
+    ## Multiple R-squared:  0.9292, Adjusted R-squared:  0.9289 
+    ## F-statistic:  3124 on 1 and 238 DF,  p-value: < 2.2e-16
 
 ``` r
 Anova(resid_pH_temp)
@@ -2061,9 +2087,9 @@ Anova(resid_pH_temp)
     ## Anova Table (Type II tests)
     ## 
     ## Response: .resid
-    ##             Sum Sq  Df F value    Pr(>F)    
-    ## temp_field  1.9545   1   25.45 8.533e-07 ***
-    ## Residuals  19.9676 260                      
+    ##            Sum Sq  Df F value    Pr(>F)    
+    ## temp_field  208.7   1    3124 < 2.2e-16 ***
+    ## Residuals    15.9 238                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2077,33 +2103,32 @@ data_resid_pH %>%
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-103-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-106-1.png)<!-- -->
 
 ``` r
-resid_ph_comp <- lm(.resid ~ producer_pcover + producer_density, data_resid_pH)
+resid_ph_comp <- lm(.resid ~ total_producer_pcover, data_resid_pH)
 summary(resid_ph_comp)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = .resid ~ producer_pcover + producer_density, data = data_resid_pH)
+    ## lm(formula = .resid ~ total_producer_pcover, data = data_resid_pH)
     ## 
     ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -0.5828 -0.2354  0.0004  0.2324  0.8146 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.84946 -0.33843 -0.07525  0.21317  1.57642 
     ## 
     ## Coefficients:
-    ##                    Estimate Std. Error t value Pr(>|t|)   
-    ## (Intercept)       0.1122944  0.0525502   2.137  0.03414 * 
-    ## producer_pcover  -0.0013235  0.0007328  -1.806  0.07279 . 
-    ## producer_density -0.0047574  0.0016962  -2.805  0.00567 **
+    ##                         Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)           -0.3617730  0.0986204  -3.668 0.000339 ***
+    ## total_producer_pcover  0.0004531  0.0013360   0.339 0.734962    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.3005 on 159 degrees of freedom
-    ##   (100 observations deleted due to missingness)
-    ## Multiple R-squared:  0.07988,    Adjusted R-squared:  0.0683 
-    ## F-statistic: 6.901 on 2 and 159 DF,  p-value: 0.001336
+    ## Residual standard error: 0.524 on 149 degrees of freedom
+    ##   (89 observations deleted due to missingness)
+    ## Multiple R-squared:  0.0007714,  Adjusted R-squared:  -0.005935 
+    ## F-statistic: 0.115 on 1 and 149 DF,  p-value: 0.735
 
 ``` r
 Anova(resid_ph_comp)
@@ -2112,12 +2137,81 @@ Anova(resid_ph_comp)
     ## Anova Table (Type II tests)
     ## 
     ## Response: .resid
-    ##                   Sum Sq  Df F value   Pr(>F)   
-    ## producer_pcover   0.2946   1  3.2622 0.072787 . 
-    ## producer_density  0.7105   1  7.8662 0.005665 **
-    ## Residuals        14.3611 159                    
+    ##                       Sum Sq  Df F value Pr(>F)
+    ## total_producer_pcover  0.032   1   0.115  0.735
+    ## Residuals             40.919 149
+
+``` r
+resid_ph_comp_benthic <- lm(.resid ~ producer_pcover, data_resid_pH)
+summary(resid_ph_comp_benthic)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = .resid ~ producer_pcover, data = data_resid_pH)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.85115 -0.33959 -0.05825  0.20999  1.58171 
+    ## 
+    ## Coefficients:
+    ##                   Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)     -3.325e-01  9.317e-02  -3.569  0.00048 ***
+    ## producer_pcover  9.689e-05  1.276e-03   0.076  0.93956    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.5208 on 152 degrees of freedom
+    ##   (86 observations deleted due to missingness)
+    ## Multiple R-squared:  3.795e-05,  Adjusted R-squared:  -0.006541 
+    ## F-statistic: 0.005768 on 1 and 152 DF,  p-value: 0.9396
+
+``` r
+Anova(resid_ph_comp_benthic)
+```
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: .resid
+    ##                 Sum Sq  Df F value Pr(>F)
+    ## producer_pcover  0.002   1  0.0058 0.9396
+    ## Residuals       41.224 152
+
+``` r
+resid_ph_comp_mobile <- lm(.resid ~ inv_producer_pcover, data_resid_pH)
+summary(resid_ph_comp_mobile)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = .resid ~ inv_producer_pcover, data = data_resid_pH)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.86653 -0.30846 -0.05197  0.20502  1.56829 
+    ## 
+    ## Coefficients:
+    ##                     Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)         -0.30971    0.04805  -6.445 1.51e-09 ***
+    ## inv_producer_pcover -0.36259    0.37041  -0.979    0.329    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.5226 on 149 degrees of freedom
+    ##   (89 observations deleted due to missingness)
+    ## Multiple R-squared:  0.00639,    Adjusted R-squared:  -0.0002785 
+    ## F-statistic: 0.9582 on 1 and 149 DF,  p-value: 0.3292
+
+``` r
+Anova(resid_ph_comp_mobile)
+```
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: .resid
+    ##                     Sum Sq  Df F value Pr(>F)
+    ## inv_producer_pcover  0.262   1  0.9582 0.3292
+    ## Residuals           40.689 149
 
 ``` r
 data_resid_pH %>% 
@@ -2129,17 +2223,17 @@ data_resid_pH %>%
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-    ## Warning: Removed 97 rows containing non-finite outside the scale range
+    ## Warning: Removed 86 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 97 rows containing missing values or values outside the scale range
+    ## Warning: Removed 86 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-105-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-110-1.png)<!-- -->
 
 ``` r
 data_resid_pH %>% 
-  ggplot(aes(x = producer_density, y = .resid, color = substrate)) + 
+  ggplot(aes(x = inv_producer_pcover, y = .resid, color = substrate)) + 
   geom_point() + 
   geom_smooth() +
   facet_wrap(~substrate, scales = "free_x")
@@ -2147,15 +2241,15 @@ data_resid_pH %>%
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-    ## Warning: Removed 100 rows containing non-finite outside the scale range
+    ## Warning: Removed 89 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 100 rows containing missing values or values outside the scale range
+    ## Warning: Removed 89 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-106-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-111-1.png)<!-- -->
 
-### TA
+### TA Residuals
 
 Fit regression for both substrate types combined
 
@@ -2170,19 +2264,19 @@ summary(TA_mod)
     ##     "ocean")))
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -1083.08  -194.56   -61.84   115.06  1884.94 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -526.37 -172.23  -33.15  111.86 1097.74 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  2.755e+03  4.258e+01  64.711   <2e-16 ***
-    ## sample_time -8.422e-03  9.250e-04  -9.105   <2e-16 ***
+    ## (Intercept)  2.700e+03  3.458e+01  78.072   <2e-16 ***
+    ## sample_time -7.285e-03  7.521e-04  -9.687   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 349.4 on 260 degrees of freedom
-    ## Multiple R-squared:  0.2418, Adjusted R-squared:  0.2388 
-    ## F-statistic:  82.9 on 1 and 260 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 272.9 on 238 degrees of freedom
+    ## Multiple R-squared:  0.2828, Adjusted R-squared:  0.2798 
+    ## F-statistic: 93.83 on 1 and 238 DF,  p-value: < 2.2e-16
 
 ``` r
 data_resid_TA <- augment(TA_mod, (data %>% filter(!substrate == "ocean")))
@@ -2199,18 +2293,18 @@ summary(resid_TA)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -984.75 -184.13  -28.49  142.76 1744.74 
+    ## -625.93 -155.23  -15.52  115.74  998.18 
     ## 
     ## Coefficients:
     ##                    Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)          -98.32      26.51  -3.709 0.000254 ***
-    ## substratelimestone   238.53      41.29   5.777 2.16e-08 ***
+    ## (Intercept)          -74.85      22.10  -3.386 0.000829 ***
+    ## substratelimestone   174.41      33.74   5.169 4.98e-07 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 328.9 on 260 degrees of freedom
-    ## Multiple R-squared:  0.1138, Adjusted R-squared:  0.1104 
-    ## F-statistic: 33.38 on 1 and 260 DF,  p-value: 2.161e-08
+    ## Residual standard error: 258.7 on 238 degrees of freedom
+    ## Multiple R-squared:  0.1009, Adjusted R-squared:  0.09716 
+    ## F-statistic: 26.72 on 1 and 238 DF,  p-value: 4.983e-07
 
 ``` r
 Anova(resid_TA)
@@ -2220,37 +2314,35 @@ Anova(resid_TA)
     ## 
     ## Response: .resid
     ##             Sum Sq  Df F value    Pr(>F)    
-    ## substrate  3611703   1  33.379 2.161e-08 ***
-    ## Residuals 28132697 260                      
+    ## substrate  1788467   1  26.719 4.983e-07 ***
+    ## Residuals 15930583 238                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-resid_TA_comp <- lm(.resid ~ calcifying_pcover + calcifying_density, data_resid_TA)
+resid_TA_comp <- lm(.resid ~ total_calcifying_pcover, data_resid_TA)
 summary(resid_TA_comp)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = .resid ~ calcifying_pcover + calcifying_density, 
-    ##     data = data_resid_TA)
+    ## lm(formula = .resid ~ total_calcifying_pcover, data = data_resid_TA)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -1087.96  -156.71   -27.67   125.23  1010.54 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -420.68 -177.79  -64.19   81.24  996.03 
     ## 
     ## Coefficients:
-    ##                    Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)         1.86068   27.46250   0.068    0.946    
-    ## calcifying_pcover   0.26690    1.35523   0.197    0.844    
-    ## calcifying_density  0.23812    0.01932  12.322   <2e-16 ***
+    ##                         Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)              108.177     27.169   3.982 0.000107 ***
+    ## total_calcifying_pcover   -1.614      1.320  -1.223 0.223314    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 282.7 on 159 degrees of freedom
-    ##   (100 observations deleted due to missingness)
-    ## Multiple R-squared:  0.491,  Adjusted R-squared:  0.4846 
-    ## F-statistic:  76.7 on 2 and 159 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 276 on 149 degrees of freedom
+    ##   (89 observations deleted due to missingness)
+    ## Multiple R-squared:  0.009936,   Adjusted R-squared:  0.003292 
+    ## F-statistic: 1.495 on 1 and 149 DF,  p-value: 0.2233
 
 ``` r
 Anova(resid_TA_comp)
@@ -2259,10 +2351,81 @@ Anova(resid_TA_comp)
     ## Anova Table (Type II tests)
     ## 
     ## Response: .resid
-    ##                      Sum Sq  Df  F value Pr(>F)    
-    ## calcifying_pcover      3099   1   0.0388 0.8441    
-    ## calcifying_density 12131296   1 151.8321 <2e-16 ***
-    ## Residuals          12704009 159                    
+    ##                           Sum Sq  Df F value Pr(>F)
+    ## total_calcifying_pcover   113951   1  1.4954 0.2233
+    ## Residuals               11354073 149
+
+``` r
+resid_TA_comp_benthic <- lm(.resid ~ calcifying_pcover, data_resid_TA)
+summary(resid_TA_comp_benthic)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = .resid ~ calcifying_pcover, data = data_resid_TA)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -415.61 -180.19  -66.32   84.39  997.73 
+    ## 
+    ## Coefficients:
+    ##                   Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)        102.340     26.323   3.888 0.000151 ***
+    ## calcifying_pcover   -1.582      1.320  -1.198 0.232679    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 275.1 on 152 degrees of freedom
+    ##   (86 observations deleted due to missingness)
+    ## Multiple R-squared:  0.009358,   Adjusted R-squared:  0.002841 
+    ## F-statistic: 1.436 on 1 and 152 DF,  p-value: 0.2327
+
+``` r
+Anova(resid_TA_comp_benthic)
+```
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: .resid
+    ##                     Sum Sq  Df F value Pr(>F)
+    ## calcifying_pcover   108684   1  1.4358 0.2327
+    ## Residuals         11505407 152
+
+``` r
+resid_TA_comp_mobile <- lm(.resid ~ inv_calcifying_pcover, data_resid_TA)
+summary(resid_TA_comp_mobile)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = .resid ~ inv_calcifying_pcover, data = data_resid_TA)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -488.73 -178.41  -54.09   89.03  920.65 
+    ## 
+    ## Coefficients:
+    ##                       Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)              56.21      28.44   1.976   0.0500 *
+    ## inv_calcifying_pcover    53.89      28.56   1.887   0.0611 .
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 274.2 on 149 degrees of freedom
+    ##   (89 observations deleted due to missingness)
+    ## Multiple R-squared:  0.02334,    Adjusted R-squared:  0.01678 
+    ## F-statistic:  3.56 on 1 and 149 DF,  p-value: 0.06113
+
+``` r
+Anova(resid_TA_comp_mobile)
+```
+
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: .resid
+    ##                         Sum Sq  Df F value  Pr(>F)  
+    ## inv_calcifying_pcover   267621   1  3.5602 0.06113 .
+    ## Residuals             11200403 149                  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2276,26 +2439,101 @@ data_resid_TA %>%
 
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
-    ## Warning: Removed 97 rows containing non-finite outside the scale range
+    ## Warning: Removed 86 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 97 rows containing missing values or values outside the scale range
+    ## Warning: Removed 86 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-111-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-118-1.png)<!-- -->
 
 ``` r
 data_resid_TA %>% 
-  ggplot(aes(x = log(calcifying_density), y = .resid, color = substrate)) + 
+  ggplot(aes(x = inv_calcifying_pcover, y = .resid, color = substrate)) + 
   geom_point() + 
   geom_smooth(method = "lm", formula = y~poly(x,2)) +
   facet_wrap(~substrate)
 ```
 
-    ## Warning: Removed 100 rows containing non-finite outside the scale range
+    ## Warning: Removed 89 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 100 rows containing missing values or values outside the scale range
+    ## Warning: Removed 89 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](TP_analysis_files/figure-gfm/unnamed-chunk-112-1.png)<!-- -->
+![](TP_analysis_files/figure-gfm/unnamed-chunk-119-1.png)<!-- -->
+
+### Deltas
+
+``` r
+delta_pH_comp <- lm(delta_pH ~ total_producer_pcover, deltas)
+summary(delta_pH_comp)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = delta_pH ~ total_producer_pcover, data = deltas)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.31112 -0.11918 -0.05951  0.08289  0.64990 
+    ## 
+    ## Coefficients:
+    ##                         Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)           -0.0438466  0.0414612  -1.058   0.2930  
+    ## total_producer_pcover  0.0010212  0.0005602   1.823   0.0715 .
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.1764 on 94 degrees of freedom
+    ##   (98 observations deleted due to missingness)
+    ## Multiple R-squared:  0.03415,    Adjusted R-squared:  0.02387 
+    ## F-statistic: 3.323 on 1 and 94 DF,  p-value: 0.07148
+
+``` r
+delta_pH_comp_benthic <- lm(delta_pH ~ producer_pcover, deltas)
+summary(delta_pH_comp_benthic)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = delta_pH ~ producer_pcover, data = deltas)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.31137 -0.11706 -0.05374  0.07378  0.64925 
+    ## 
+    ## Coefficients:
+    ##                  Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)     -0.046850   0.038939  -1.203   0.2319  
+    ## producer_pcover  0.001059   0.000532   1.990   0.0494 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.1746 on 96 degrees of freedom
+    ##   (96 observations deleted due to missingness)
+    ## Multiple R-squared:  0.03962,    Adjusted R-squared:  0.02962 
+    ## F-statistic: 3.961 on 1 and 96 DF,  p-value: 0.04941
+
+``` r
+delta_pH_comp_mobile <- lm(delta_pH ~ inv_producer_pcover, deltas)
+summary(delta_pH_comp_mobile)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = delta_pH ~ inv_producer_pcover, data = deltas)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.29066 -0.11239 -0.07585  0.04577  0.68109 
+    ## 
+    ## Coefficients:
+    ##                     Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)         0.023981   0.020817   1.152    0.252
+    ## inv_producer_pcover 0.004076   0.156733   0.026    0.979
+    ## 
+    ## Residual standard error: 0.1795 on 94 degrees of freedom
+    ##   (98 observations deleted due to missingness)
+    ## Multiple R-squared:  7.195e-06,  Adjusted R-squared:  -0.01063 
+    ## F-statistic: 0.0006763 on 1 and 94 DF,  p-value: 0.9793

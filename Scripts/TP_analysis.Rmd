@@ -102,7 +102,7 @@ data <- left_join(chem, TA, by = "sample_ID")
 Add in pH calculated from tris, physical parameters, and pool volumes
 ```{r}
 data <- left_join(data, pHSlope)
-data <- left_join(data, (params %>% select(site, pool_number, substrate, perimeter_m, surface_area_m2)), by = c("site", "pool_number"))
+data <- left_join(data, (params %>% select(site, pool_number, substrate, perimeter_m, pool_surface_area_m2)), by = c("site", "pool_number"))
 data <- left_join(data, pool_volumes)
 ```
 
@@ -157,6 +157,13 @@ Append test data
 ```{r}
 data <- bind_rows(data, testdata)
 ```
+
+Remove Pools 1 and 17
+```{r}
+data <- data %>% filter(!(pool_number %in% c(1, 17)))
+```
+
+
 
 Calculate DIC using seacarb
 ```{r}
@@ -317,9 +324,9 @@ Calculate Delta TA and Delta DIC between two consecutive timepoints
 ```{r}
 deltas <- data %>%
   
-  select(date, site, pool_number, substrate, surface_area_m2, mean_wind_speed, pool_volume, time_point, sample_time, temp_pool, pH, TA_norm, DIC_norm, FCO2, dissolved_oxygen, OmegaAragonite) %>%
+  select(date, site, pool_number, substrate, pool_surface_area_m2, mean_wind_speed, pool_volume, time_point, sample_time, temp_pool, pH, TA_norm, DIC_norm, FCO2, dissolved_oxygen, OmegaAragonite) %>%
   
-  group_by(date, site, pool_number, substrate, surface_area_m2) %>%
+  group_by(date, site, pool_number, substrate, pool_surface_area_m2) %>%
   
   arrange(time_point, .by_group = TRUE) %>%
   
@@ -370,7 +377,7 @@ deltas <- deltas %>% mutate(delta_pH_norm = (delta_pH/delta_time),
 Calculate NEC
 ```{r}
 deltas <- deltas %>% 
-  mutate(NEC = ((-1)*(delta_TA/2)*1025*(mean_vol/surface_area_m2)*(1/delta_time))/100)
+  mutate(NEC = ((-1)*(delta_TA/2)*1025*(mean_vol/pool_surface_area_m2)*(1/delta_time))/100)
 
 # NEC = (-1) * (delta TA/2 * density * volume/surface area) * (1 / delta time) / 100
 
@@ -388,7 +395,7 @@ deltas <- deltas %>%
 Calculate NEP
 ```{r}
 deltas <- deltas %>% 
-  mutate(NEP = (((-delta_DIC)*1025*(mean_vol/surface_area_m2)*(1/delta_time))/100) - NEC + mean_FCO2)
+  mutate(NEP = (((-delta_DIC)*1025*(mean_vol/pool_surface_area_m2)*(1/delta_time))/100) - NEC + mean_FCO2)
 
 # NEP = ((delta DIC * density * volume/surface area) * (1 / delta time)) - NEC - FCO2
 
@@ -401,6 +408,16 @@ deltas <- deltas %>%
 # positive values are net photosynthesis 
 #(the equation is - fugosity, but because it is time 2-1 it is plus here)
 ```
+
+
+Join community comp summary to deltas data
+```{r}
+deltas <- left_join(deltas, community_comp, by = c("pool_number", "date", "site", "substrate"))
+```
+
+
+
+
 
 
 ## Data Viz
@@ -945,16 +962,16 @@ ggsave(here("Output", "delta_DIC_vs_delta_pH_onepanel.png"), width = 4, height =
 -----
 Pool 1 salinity lab vs TA reg
 ```{r}
-data %>% 
-  filter(!substrate %in% c("ocean", "basalt")) %>% 
-  filter(pool_number == 1) %>%
-  ggplot(aes(x = salinity_pool, y = TA)) + 
-  geom_point(size = 2, alpha = 0.7) + 
-  geom_smooth(method = "lm") + 
-  facet_wrap(~substrate, 
-               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
-  theme_bw() + 
-  labs(x = "Pool Salinity", y = "Reg Total Alkalinity") 
+#data %>% 
+#  filter(!substrate %in% c("ocean", "basalt")) %>% 
+#  filter(pool_number == 1) %>%
+#  ggplot(aes(x = salinity_pool, y = TA)) + 
+#  geom_point(size = 2, alpha = 0.7) + 
+#  geom_smooth(method = "lm") + 
+#  facet_wrap(~substrate, 
+#               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+#  theme_bw() + 
+#  labs(x = "Pool Salinity", y = "Reg Total Alkalinity") 
 ```
 
 ### Salinity vs temp
@@ -1328,8 +1345,8 @@ data %>%
   #facet_wrap(~substrate)
 ```
 
-## Residuals Stuff
-### pH
+## Models
+### pH Residuals
 Fit regression for both substrate types combined
 ```{r}
 pH_mod <- lm(((pH*temp_field)/(mean(data$temp_field))) ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
@@ -1355,6 +1372,7 @@ Anova(resid_ph)
 ```
 
 ```{r}
+# this uses pH temp normalized
 resid_pH_temp <- lm(.resid ~ temp_field, data_resid_pH)
 summary(resid_pH_temp)
 Anova(resid_pH_temp)
@@ -1368,11 +1386,20 @@ data_resid_pH %>%
 ```
 
 ```{r}
-resid_ph_comp <- lm(.resid ~ producer_pcover + producer_density, data_resid_pH)
+resid_ph_comp <- lm(.resid ~ total_producer_pcover, data_resid_pH)
 summary(resid_ph_comp)
 Anova(resid_ph_comp)
 ```
-
+```{r}
+resid_ph_comp_benthic <- lm(.resid ~ producer_pcover, data_resid_pH)
+summary(resid_ph_comp_benthic)
+Anova(resid_ph_comp_benthic)
+```
+```{r}
+resid_ph_comp_mobile <- lm(.resid ~ inv_producer_pcover, data_resid_pH)
+summary(resid_ph_comp_mobile)
+Anova(resid_ph_comp_mobile)
+```
 
 ```{r}
 data_resid_pH %>% 
@@ -1383,13 +1410,13 @@ data_resid_pH %>%
 ```
 ```{r}
 data_resid_pH %>% 
-  ggplot(aes(x = producer_density, y = .resid, color = substrate)) + 
+  ggplot(aes(x = inv_producer_pcover, y = .resid, color = substrate)) + 
   geom_point() + 
   geom_smooth() +
   facet_wrap(~substrate, scales = "free_x")
 ```
 
-### TA
+### TA Residuals
 Fit regression for both substrate types combined
 ```{r}
 TA_mod <- lm(TA ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
@@ -1407,10 +1434,23 @@ Anova(resid_TA)
 ```
 
 ```{r}
-resid_TA_comp <- lm(.resid ~ calcifying_pcover + calcifying_density, data_resid_TA)
+resid_TA_comp <- lm(.resid ~ total_calcifying_pcover, data_resid_TA)
 summary(resid_TA_comp)
 Anova(resid_TA_comp)
 ```
+
+```{r}
+resid_TA_comp_benthic <- lm(.resid ~ calcifying_pcover, data_resid_TA)
+summary(resid_TA_comp_benthic)
+Anova(resid_TA_comp_benthic)
+```
+
+```{r}
+resid_TA_comp_mobile <- lm(.resid ~ inv_calcifying_pcover, data_resid_TA)
+summary(resid_TA_comp_mobile)
+Anova(resid_TA_comp_mobile)
+```
+
 
 ```{r}
 data_resid_TA %>% 
@@ -1422,8 +1462,28 @@ data_resid_TA %>%
 
 ```{r}
 data_resid_TA %>% 
-  ggplot(aes(x = log(calcifying_density), y = .resid, color = substrate)) + 
+  ggplot(aes(x = inv_calcifying_pcover, y = .resid, color = substrate)) + 
   geom_point() + 
   geom_smooth(method = "lm", formula = y~poly(x,2)) +
   facet_wrap(~substrate)
 ```
+
+
+
+### Deltas
+```{r}
+delta_pH_comp <- lm(delta_pH ~ total_producer_pcover, deltas)
+summary(delta_pH_comp)
+```
+
+```{r}
+delta_pH_comp_benthic <- lm(delta_pH ~ producer_pcover, deltas)
+summary(delta_pH_comp_benthic)
+```
+
+```{r}
+delta_pH_comp_mobile <- lm(delta_pH ~ inv_producer_pcover, deltas)
+summary(delta_pH_comp_mobile)
+```
+
+
