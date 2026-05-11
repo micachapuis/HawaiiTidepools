@@ -1,58 +1,59 @@
-id,category,category_name,production,calcification,avg_diameter_or_length_cm,other_dimension_cm,surface_area_cm2,surface_area_m2
-bare_rock,bare_rock,Bare Rock,non-producer,non-calcifying,,,,
-sand,sand,Sand,non-producer,non-calcifying,,,,
-turf,turf_cyano,Turf/Cyanobacteria,producer,non-calcifying,,,,
-cyanobacteria,turf_cyano,Turf/Cyanobacteria,producer,non-calcifying,,,,
-turf_cyano,turf_cyano,Turf/Cyanobacteria,producer,non-calcifying,,,,
-biofilm,turf_cyano,Turf/Cyanobacteria,producer,non-calcifying,,,,
-CCA,CCA,CCA,producer,calcifying,,,,
-brown_encrusting,encrusting_algae,Encrusting Algae,producer,non-calcifying,,,,
-red_encrusting,encrusting_algae,Encrusting Algae,producer,calcifying,,,,
-sargassum_polyphyllum,brown_macroalgae,Brown Macroalgae,producer,non-calcifying,,,,
-padina_sanctae_crucis,brown_macroalgae,Brown Macroalgae,producer,calcifying,,,,
-turbinaria_ornata,brown_macroalgae,Brown Macroalgae,producer,non-calcifying,,,,
-dictyota_sandvicensis,brown_macroalgae,Brown Macroalgae,producer,non-calcifying,,,,
-loose_turbinaria,brown_macroalgae,Brown Macroalgae,producer,non-calcifying,,,,
-acanthophora_spicifera,red_macroalgae,Red Macroalgae,producer,non-calcifying,,,,
-gelidiella_acerosa,red_macroalgae,Red Macroalgae,producer,non-calcifying,,,,
-coelothrix_irregularis,red_macroalgae,Red Macroalgae,producer,non-calcifying,,,,
-microdictyon_setchellianum,green_macroalgae,Green Macroalgae,producer,non-calcifying,,,,
-halimeda_discoidea,green_macroalgae,Green Macroalgae,producer,calcifying,,,,
-cladophora_sp,green_macroalgae,Green Macroalgae,producer,non-calcifying,,,,
-dictyosphaeria_versluysii,green_macroalgae,Green Macroalgae,producer,non-calcifying,,,,
-leptolyngbya_crosbyana,turf_cyano,Turf/Cyanobacteria,producer,non-calcifying,,,,
-loose_rock,loose_abiotic,Loose Rocks/Rubble,non-producer,non-calcifying,,,,
-loose_rock_CCA,CCA,CCA,producer,calcifying,,,,
-loose_rock_turf_cyano,turf_cyano,Turf/Cyanobacteria,producer,non-calcifying,,,,
-loose_rock_red_encrusting,encrusting_algae,Encrusting Algae,producer,calcifying,,,,
-loose_rock_red_sponge,sponge,Sponge,non-producer,non-calcifying,,,,
-rubble,loose_abiotic,Loose Rocks/Rubble,non-producer,non-calcifying,,,,
-rubble_CCA,CCA,CCA,producer,calcifying,,,,
-rubble_red_encrusting,encrusting_algae,Encrusting Algae,producer,calcifying,,,,
-sponge,sponge,Sponge,non-producer,non-calcifying,,,,
-red_sponge,sponge,Sponge,non-producer,non-calcifying,,,,
-hermit_crab_large,crabs,Crabs,non-producer,calcifying,1.25,,1.22718463,0.000122718463
-hermit_crab_small,crabs,Crabs,non-producer,calcifying,0.4,,0.1256637061,0.00001256637061
-rock_crab,crabs,Crabs,non-producer,calcifying,3,3,9,0.0009
-crab_other,crabs,Crabs,non-producer,calcifying,3,3,9,0.0009
-snail_large,snails,Snails,non-producer,calcifying,1.25,,1.22718463,0.000122718463
-snail_small,snails,Snails,non-producer,calcifying,0.3,,0.07068583471,0.000007068583471
-cowrie,snails,Snails,non-producer,calcifying,2,1,2,0.0002
-seahare,seahares,Sea Hares,non-producer,calcifying,2,0.35,0.7,0.00007
-exaiptasia_diaphana,anemones,Anemones,producer,non-calcifying,1,,0.7853981634,0.00007853981634
-bivalve,bivalves,Bivalves,non-producer,calcifying,1.75,1.25,2.1875,0.00021875
-zoanthid,zoanthid,Zoanthid,producer,non-calcifying,1.5,,1.767145868,0.0001767145868
-fish_1cm,fish,Fish,non-producer,non-calcifying,1,0.15,0.15,0.000015
-fish_2cm,fish,Fish,non-producer,non-calcifying,2.00,0.30,0.6,0.00006
-fish_3cm,fish,Fish,non-producer,non-calcifying,3,0.45,1.35,0.000135
-fish_greater_4cm,fish,Fish,non-producer,non-calcifying,5,0.75,3.75,0.000375
-eel,fish,Fish,non-producer,non-calcifying,2,15,30,0.003
-holothuria_atra,sea_cucumbers,Sea Cucumbers,non-producer,calcifying,15,4,60,0.006
-holothuria_cinerascens,sea_cucumbers,Sea Cucumbers,non-producer,calcifying,10,3,30,0.003
-actinopyga_varians,sea_cucumbers,Sea Cucumbers,non-producer,calcifying,15,5,75,0.0075
-holothuria_pervicax,sea_cucumbers,Sea Cucumbers,non-producer,calcifying,10,3,30,0.003
-sea_cucumber,sea_cucumbers,Sea Cucumbers,non-producer,calcifying,10,3,30,0.003
-echinometra_oblonga,urchins,Urchins,non-producer,calcifying,3.25,,8.295768101,0.0008295768101
-echinometra_mathaei,urchins,Urchins,non-producer,calcifying,3.25,,8.295768101,0.0008295768101
-jellyfish_small,others,Others,non-producer,non-calcifying,0.1,,0.007853981634,0.0000007853981634
-shrimp,others,Others,non-producer,calcifying,2,0.75,1.5,0.00015
+id,category,category_name,broad_category,production,calcification,avg_diameter_or_length_cm,other_dimension_cm,surface_area_cm2,surface_area_m2
+bare_rock,bare_rock,Bare Rock,,non-producer,non-calcifying,,,,
+sand,sand,Sand,,non-producer,non-calcifying,,,,
+turf,turf_cyano,Turf/Cyanobacteria,Turf/Cyanobacteria,producer,non-calcifying,,,,
+cyanobacteria,turf_cyano,Turf/Cyanobacteria,Turf/Cyanobacteria,producer,non-calcifying,,,,
+turf_cyano,turf_cyano,Turf/Cyanobacteria,Turf/Cyanobacteria,producer,non-calcifying,,,,
+biofilm,biofilm,Biofilm,Biofilm,producer,non-calcifying,,,,
+CCA,CCA,CCA,CCA,producer,calcifying,,,,
+brown_encrusting,encrusting_algae,Encrusting Algae,Macroalgae,producer,non-calcifying,,,,
+red_encrusting,encrusting_algae,Encrusting Algae,Macroalgae,producer,calcifying,,,,
+sargassum_spp,brown_macroalgae,Brown Macroalgae,Macroalgae,producer,non-calcifying,,,,
+padina_sanctae_crucis,brown_macroalgae,Brown Macroalgae,Macroalgae,producer,calcifying,,,,
+turbinaria_ornata,brown_macroalgae,Brown Macroalgae,Macroalgae,producer,non-calcifying,,,,
+dictyota_sandvicensis,brown_macroalgae,Brown Macroalgae,Macroalgae,producer,non-calcifying,,,,
+loose_turbinaria,brown_macroalgae,Brown Macroalgae,Macroalgae,producer,non-calcifying,,,,
+acanthophora_spicifera,red_macroalgae,Red Macroalgae,Macroalgae,producer,non-calcifying,,,,
+gelidiella_acerosa,red_macroalgae,Red Macroalgae,Macroalgae,producer,non-calcifying,,,,
+coelothrix_irregularis,red_macroalgae,Red Macroalgae,Macroalgae,producer,non-calcifying,,,,
+microdictyon_setchellianum,green_macroalgae,Green Macroalgae,Macroalgae,producer,non-calcifying,,,,
+halimeda_discoidea,green_macroalgae,Green Macroalgae,Macroalgae,producer,calcifying,,,,
+cladophora_sp,green_macroalgae,Green Macroalgae,Macroalgae,producer,non-calcifying,,,,
+dictyosphaeria_versluysii,green_macroalgae,Green Macroalgae,Macroalgae,producer,non-calcifying,,,,
+ulva_lactuca,green_macroalgae,Green Macroalgae,Macroalgae,producer,non-calcifying,,,,
+leptolyngbya_crosbyana,turf_cyano,Turf/Cyanobacteria,Turf/Cyanobacteria,producer,non-calcifying,,,,
+loose_rock,loose_abiotic,Loose Rocks/Rubble,,non-producer,non-calcifying,,,,
+loose_rock_CCA,CCA,CCA,CCA,producer,calcifying,,,,
+loose_rock_turf_cyano,turf_cyano,Turf/Cyanobacteria,Turf/Cyanobacteria,producer,non-calcifying,,,,
+loose_rock_red_encrusting,encrusting_algae,Encrusting Algae,Macroalgae,producer,calcifying,,,,
+loose_rock_red_sponge,sponge,Sponge,,non-producer,non-calcifying,,,,
+rubble,loose_abiotic,Loose Rocks/Rubble,,non-producer,non-calcifying,,,,
+rubble_CCA,CCA,CCA,CCA,producer,calcifying,,,,
+rubble_red_encrusting,encrusting_algae,Encrusting Algae,Macroalgae,producer,calcifying,,,,
+sponge,sponge,Sponge,,non-producer,non-calcifying,,,,
+red_sponge,sponge,Sponge,,non-producer,non-calcifying,,,,
+hermit_crab_large,crabs,Crabs,,non-producer,calcifying,1.25,,1.22718463,0.000122718463
+hermit_crab_small,crabs,Crabs,,non-producer,calcifying,0.4,,0.1256637061,0.00001256637061
+rock_crab,crabs,Crabs,,non-producer,calcifying,3,3,9,0.0009
+crab_other,crabs,Crabs,,non-producer,calcifying,3,3,9,0.0009
+snail_large,snails,Snails,,non-producer,calcifying,1.25,,1.22718463,0.000122718463
+snail_small,snails,Snails,,non-producer,calcifying,0.3,,0.07068583471,0.000007068583471
+cowrie,snails,Snails,,non-producer,calcifying,2,1,2,0.0002
+seahare,seahares,Sea Hares,,non-producer,calcifying,2,0.35,0.7,0.00007
+exaiptasia_diaphana,anemones,Anemones,,producer,non-calcifying,1,,0.7853981634,0.00007853981634
+bivalve,bivalves,Bivalves,,non-producer,calcifying,1.75,1.25,2.1875,0.00021875
+zoanthid,zoanthid,Zoanthid,,producer,non-calcifying,1.5,,1.767145868,0.0001767145868
+fish_1cm,fish,Fish,,non-producer,non-calcifying,1,0.15,0.15,0.000015
+fish_2cm,fish,Fish,,non-producer,non-calcifying,2.00,0.30,0.6,0.00006
+fish_3cm,fish,Fish,,non-producer,non-calcifying,3,0.45,1.35,0.000135
+fish_greater_4cm,fish,Fish,,non-producer,non-calcifying,5,0.75,3.75,0.000375
+eel,fish,Fish,,non-producer,non-calcifying,2,15,30,0.003
+holothuria_atra,sea_cucumbers,Sea Cucumbers,,non-producer,calcifying,15,4,60,0.006
+holothuria_cinerascens,sea_cucumbers,Sea Cucumbers,,non-producer,calcifying,10,3,30,0.003
+actinopyga_varians,sea_cucumbers,Sea Cucumbers,,non-producer,calcifying,15,5,75,0.0075
+holothuria_pervicax,sea_cucumbers,Sea Cucumbers,,non-producer,calcifying,10,3,30,0.003
+sea_cucumber,sea_cucumbers,Sea Cucumbers,,non-producer,calcifying,10,3,30,0.003
+echinometra_oblonga,urchins,Urchins,,non-producer,calcifying,3.25,,8.295768101,0.0008295768101
+echinometra_mathaei,urchins,Urchins,,non-producer,calcifying,3.25,,8.295768101,0.0008295768101
+jellyfish_small,others,Others,,non-producer,non-calcifying,0.1,,0.007853981634,0.0000007853981634
+shrimp,others,Others,,non-producer,calcifying,2,0.75,1.5,0.00015

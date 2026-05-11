@@ -19,6 +19,7 @@ library(scales)
 library(ggeffects)
 library(sjPlot)
 library(broom)
+library(emmeans)
 ```
 
 ## Load in Data
@@ -33,8 +34,8 @@ fdom <- read_csv(here("Data", "fDOM_indices.csv"))
 
 community_comp <- read_csv(here("Data", "comm_comp_summary.csv"))
 
-kb_wind <- read_csv(here("Data", "Climate", "KB_0551_20250101_20251108.csv"))
-sb_wind <- read_csv(here("Data", "Climate", "SB_0531_20250101_20251108.csv"))
+kb_wind <- read_csv(here("Data", "Climate", "KB_0551_20250101_20260305.csv"))
+sb_wind <- read_csv(here("Data", "Climate", "SB_0531_20250101_20260223.csv"))
 ```
 
 
@@ -106,6 +107,14 @@ data <- left_join(data, (params %>% select(site, pool_number, substrate, perimet
 data <- left_join(data, pool_volumes)
 ```
 
+```{r}
+data %>% ggplot(aes(x = pH, y = pH_insitu)) + geom_point() + geom_abline(intercept=0,slope=1)
+```
+
+```{r}
+data %>% ggplot(aes(x = temp_pool, y = pH_insitu)) + geom_point() + facet_wrap(~pool_number)
+```
+
 Selecting columns 
 ```{r}
 data <- data %>% select(-observers, -notes, -Sample.Index)
@@ -118,7 +127,7 @@ data <- data %>% mutate(substrate = replace_na(substrate, "ocean"))
 
 Removing Kaihalulu Data collected on 2025/06/08 due to rain
 ```{r}
-data <- data %>% filter(!date == "2025/06/08")
+data <- data %>% filter(!date %in% c("2025-06-08"))
 ```
 
 
@@ -155,20 +164,28 @@ data <- left_join(data, fdom)
 
 Append test data 
 ```{r}
-data <- bind_rows(data, testdata)
+testdata <- testdata %>% rename("pH_insitu" = "pH") # not actually in situ bc didn't have pool salinity so can't calculate, but joining it in for the purposes of presenting until I get new data
+
+testdata <- testdata %>% filter(!date %in% "2025-02-16") # filter out first day of test sampling
+testdata <- testdata %>% filter(site %in% "Sandy Beach") # take Diamond Head out
+
+data <- bind_rows(data, testdata) 
 ```
 
-Remove Pools 1 and 17
+Remove Pools 1 and 17 (suspected groundwater)
 ```{r}
 data <- data %>% filter(!(pool_number %in% c(1, 17)))
 ```
 
+```{r}
+data <- data %>% drop_na(salinity_field)
+```
 
 
 Calculate DIC using seacarb
 ```{r}
 CO2 <- carb(flag = 8, # pH and ALK given
-            data$pH, # first variable given
+            data$pH_insitu, # first variable given
             data$TA/1000000, # value of second variable in mol/kg
             S = data$salinity_field, #which salinity should I use?? using field for consistency
             T = data$temp_pool, # temp
@@ -194,7 +211,7 @@ CO2 <- CO2 %>%
          CO3 = CO3*1000000,
          DIC = DIC*1000000,
          HCO3 = HCO3*1000000) %>% # convert everything back to umol %>%
-select(pH, DIC, pCO2 = pCO2insitu, CO2, CO3, HCO3, OmegaCalcite, OmegaAragonite) 
+select(pH_insitu = pH, DIC, pCO2 = pCO2insitu, CO2, CO3, HCO3, OmegaCalcite, OmegaAragonite) 
 ```
 
 Re-Join with rest of data using pH as join column
@@ -286,7 +303,7 @@ data <- data %>% mutate(FCO2 = FCO2_Calc(temp = temp_pool, sal = salinity_pool, 
 
 ### NEC
 
-Calculate Delta TA and Delta DIC between two consecutive timepoints
+OLD -- Calculate Delta TA and Delta DIC between two consecutive timepoints
 ```{r}
 #deltas <- data %>% 
 #  filter(pool_number %in% c("ocean", 27, 30)) %>%
@@ -324,7 +341,7 @@ Calculate Delta TA and Delta DIC between two consecutive timepoints
 ```{r}
 deltas <- data %>%
   
-  select(date, site, pool_number, substrate, pool_surface_area_m2, mean_wind_speed, pool_volume, time_point, sample_time, temp_pool, pH, TA_norm, DIC_norm, FCO2, dissolved_oxygen, OmegaAragonite) %>%
+  select(date, site, pool_number, substrate, pool_surface_area_m2, mean_wind_speed, pool_volume, time_point, sample_time, temp_pool, pH_insitu, TA_norm, DIC_norm, FCO2, dissolved_oxygen, OmegaAragonite) %>%
   
   group_by(date, site, pool_number, substrate, pool_surface_area_m2) %>%
   
@@ -332,14 +349,14 @@ deltas <- data %>%
   
   pivot_wider(
     names_from = time_point,
-    values_from = c(pH, TA_norm, DIC_norm, temp_pool, sample_time, pool_volume, FCO2, dissolved_oxygen, OmegaAragonite),
+    values_from = c(pH_insitu, TA_norm, DIC_norm, temp_pool, sample_time, pool_volume, FCO2, dissolved_oxygen, OmegaAragonite),
     names_glue = "{.value}{time_point}") %>%
   
   mutate(
-    delta_pH1 = pH2 - pH1, # change in pH between two sampling points
-    delta_pH2 = pH3 - pH2,
-    mean_pH1 = mean(pH2, pH1, na.rm = TRUE), 
-    mean_pH2 = mean(pH3, pH2, na.rm = TRUE),
+    delta_pH1 = pH_insitu2 - pH_insitu1, # change in pH between two sampling points
+    delta_pH2 = pH_insitu3 - pH_insitu2,
+    mean_pH1 = mean(pH_insitu2, pH_insitu1, na.rm = TRUE), 
+    mean_pH2 = mean(pH_insitu3, pH_insitu2, na.rm = TRUE),
     delta_TA1 = TA_norm2 - TA_norm1, # change in TA between two sampling points
     delta_TA2 = TA_norm3 - TA_norm2,
     delta_DIC1 = DIC_norm2 - DIC_norm1, # change in DIC between two sampling points
@@ -361,7 +378,7 @@ deltas <- data %>%
       cols = matches("delta_|mean_"), # finds every column that stars with either "delta_" or "vol_avg"
       names_to = c(".value", "interval"), # interval will be 1 or 2 (1 is from T1 to T2 and 2 is from T2 to T3), .value takes the name of whichever value we get the delta for
       names_pattern = "(.*?)([12])$") %>%  # this renames all the columns to remove the 1s or 2s
-  select(!(pH1:OmegaAragonite3)) %>%
+  select(!(pH_insitu1:OmegaAragonite3)) %>%
   filter(!is.na(interval))
 ```
 
@@ -477,8 +494,10 @@ data %>% ggplot(aes(x = time_shift, y = temp_pool, color = substrate)) +
   scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
-    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
-    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%h:%m")
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 6 * 3600),  # every 6 hours (avoid 86400 endpoint)
+    labels = function(x) {
+      substr(as.character(hms::as_hms(((x + start) %% (24 * 60 * 60)))), 1, 5) # drops the seconds from x axis label
+    }
   ) 
 
 ggsave(here("Output", "temp_over_time.png"), width = 8, height = 6)
@@ -525,11 +544,11 @@ ggsave(here("Output", "salinity_over_time.png"), width = 8, height = 6)
 
 ### pH
 ```{r}
-data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = pH, color = pool_number)) +
+data %>% filter(site %in% "Kaihalulu Beach") %>% ggplot(aes(x = sample_time, y = pH_insitu, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 ```{r}
-data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = pH, color = pool_number)) +
+data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = pH_insitu, color = pool_number)) +
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (tris)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
@@ -543,19 +562,19 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = pH_
     facet_wrap(~site, scales = "free_x") + geom_line(linewidth = 0.8) + geom_point() + theme_minimal() + labs(title = "pH (probe)")  + theme(axis.text.x = element_text(angle = 30))
 ```
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = pH)) +
+data %>% ggplot(aes(x = sample_time, y = pH_insitu)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "pH")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = pH, color = site)) +
+data %>% ggplot(aes(x = sample_time, y = pH_insitu, color = site)) +
     facet_wrap(~substrate) + geom_smooth() + geom_point() + theme_minimal() + labs(title = "pH")  + theme(axis.text.x = element_text(angle = 30))
 ```
 
 
 ```{r}
-data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
+data %>% ggplot(aes(x = sample_time, y = pH_insitu, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #, se=FALSE) + 
@@ -568,32 +587,73 @@ data %>% ggplot(aes(x = sample_time, y = pH, color = substrate)) +
 
 #### pH (not temperature normalized)
 ```{r}
-data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
+data %>%
+  filter(!site %in% "Diamond Head") %>%
+  ggplot(aes(x = time_shift, y = pH_insitu, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
-  geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
+  geom_smooth(method = "gam", alpha = 0.3, color = "gray70", se = FALSE) + #method = "lm", se=FALSE) + 
   geom_point() + 
   theme_bw() +
   guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25),
+  scale_color_manual(values = c("#1A85FF", "#D41159", "#11D48C")) +
+  theme(#axis.text.x = element_text(angle = 25),
+        axis.text.y = element_text(size = 18),
+        axis.text.x = element_text(size = 17),
+        axis.title = element_text(size = 20),
+        strip.text = element_text(size = 20)) +
+  geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
+  labs(x = "Sample Time", 
+       y = expression("pH"["T"])) +
+   scale_x_continuous(
+    limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
+    expand = c(0, 0),
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 6 * 3600),  # break every 6 hours (avoid 86400 endpoint)
+    #labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+    labels = function(x) {
+      substr(as.character(hms::as_hms(((x + start) %% (24 * 60 * 60)))), 1, 5) # drops the seconds from x axis label
+    }
+  )
+
+ggsave(here("Output", "pH_over_time.png"), width = 9, height = 6)
+```
+
+#### pH pool vs ocean
+```{r}
+data %>% 
+  filter(!pool_number %in% "ocean") %>%
+  ggplot(aes(x = time_shift, y = pH_insitu)) +
+  #  facet_wrap(~substrate, 
+  #             labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
+  geom_smooth(method = "gam", color = "gray30") + #method = "lm", se=FALSE) + 
+  geom_point(aes(color = substrate)) + 
+  theme_bw() +
+  theme(#axis.text.x = element_text(angle = 25),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
         strip.text = element_text(size = 14)) +
   geom_vline(xintercept = line_shift, linetype = "dashed", color = "gray40") + # vertical line at sunset
-  labs(x = "Sample Time") +
+  labs(x = "Sample Time", color = "Substrate") +
    scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
-    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
-    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%h:%m")
-  )
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 6 * 3600),  # break every 6 hours (avoid 86400 endpoint)
+    #labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+    labels = function(x) {
+      substr(as.character(hms::as_hms(((x + start) %% (24 * 60 * 60)))), 1, 5) # drops the seconds from x axis label
+    }
+  ) +
+   scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
 
-ggsave(here("Output", "pH_over_time.png"), width = 8, height = 6)
+ggsave(here("Output", "pH_pool_vs_ocean.png"), width = 8, height = 6)
 ```
+
+
+
 #### pH (Temperature Normalized)
 ```{r}
 # temp normalize
-data %>% ggplot(aes(x = time_shift, y = (pH*temp_field)/(mean(data$temp_field)), color = substrate)) +
+data %>% ggplot(aes(x = time_shift, y = (pH_insitu*temp_field)/(mean(data$temp_field)), color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
@@ -619,7 +679,7 @@ ggsave(here("Output", "pH_over_time_temp_normalized.png"), width = 8, height = 6
 ####pH (Temperature and Salinity Normalized)
 ```{r}
 # temp + sal normalize
-data %>% ggplot(aes(x = time_shift, y = (((pH*temp_field)/(mean(data$temp_field)))*salinity_field)/mean(data$salinity_field), color = substrate)) +
+data %>% ggplot(aes(x = time_shift, y = (((pH_insitu*temp_field)/(mean(data$temp_field)))*salinity_field)/mean(data$salinity_field), color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
@@ -643,11 +703,8 @@ ggsave(here("Output", "pH_over_time_temp_sal_normalized.png"), width = 8, height
 ```
 
 
-
-
-
 ```{r}
-data %>% ggplot(aes(x = time_shift, y = pH, color = substrate)) +
+data %>% ggplot(aes(x = time_shift, y = pH_insitu, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
@@ -697,7 +754,9 @@ data %>% ggplot(aes(x = sample_time, y = TA_norm)) +
 ```
 #### TA (Salinity Normalized)
 ```{r}
-data %>% ggplot(aes(x = time_shift, y = TA_norm, color = substrate)) +
+data %>% 
+  #filter(!site %in% "Diamond Head") %>%
+  ggplot(aes(x = time_shift, y = TA_norm, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #, se=FALSE) + 
@@ -723,14 +782,17 @@ ggsave(here("Output", "TA_over_time_sal_normalized.png"), width = 8, height = 6)
 #### TA (not salinity normalized)
 ```{r}
 # for TA over time plot use raw data, not normalized
-data %>% ggplot(aes(x = time_shift, y = TA, color = substrate)) +
+data %>% 
+  #filter(!site %in% "Diamond Head") %>%
+  #filter(!pool_number %in% c(2,3,6,15)) %>%
+  ggplot(aes(x = time_shift, y = TA, color = substrate)) +
     facet_wrap(~substrate, 
                labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) + 
   geom_smooth(method = "gam") + #method = "lm", se=FALSE) + 
   geom_point() + 
   theme_bw() +
-  guides(color = "none") +
-  theme(axis.text.x = element_text(angle = 25),
+  #guides(color = "none") +
+  theme(#axis.text.x = element_text(angle = 25),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
         strip.text = element_text(size = 14)) +
@@ -740,8 +802,11 @@ data %>% ggplot(aes(x = time_shift, y = TA, color = substrate)) +
    scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
-    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
-    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 6 * 3600),  # break every 6 hours (avoid 86400 endpoint)
+    #labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+    labels = function(x) {
+      substr(as.character(hms::as_hms(((x + start) %% (24 * 60 * 60)))), 1, 5) # drops the seconds from x axis label
+    }
   )
 
 ggsave(here("Output", "TA_over_time.png"), width = 8, height = 6)
@@ -798,8 +863,10 @@ data %>% ggplot(aes(x = time_shift, y = dissolved_oxygen, color = substrate)) +
   scale_x_continuous(
     limits = c(0, 24 * 60 * 60 - 1),      # full day: 06:30 -> 06:29 next day
     expand = c(0, 0),
-    breaks = seq(0, 24 * 60 * 60 - 1, by = 3 * 3600),  # every 3 hours (avoid 86400 endpoint)
-    labels = function(x) format(hms::as_hms((x + start) %% (24 * 60 * 60)), "%H:%M")
+    breaks = seq(0, 24 * 60 * 60 - 1, by = 6 * 3600),  # every 3 hours (avoid 86400 endpoint)
+        labels = function(x) {
+      substr(as.character(hms::as_hms(((x + start) %% (24 * 60 * 60)))), 1, 5) # drops the seconds from x axis label
+    }
   )
 
 ggsave(here("Output", "oxygen_over_time.png"), width = 8, height = 6)  
@@ -830,6 +897,14 @@ ggsave(here("Output", "oxygen_sat_over_time.png"), width = 8, height = 6)
 ```
 
 ### Deltas
+
+Delta Temp vs Delta pH
+```{r}
+deltas %>% filter(!site %in% "Diamond Head") %>% ggplot(aes(x = delta_temp, y = delta_pH, color = site)) + geom_point()
+```
+
+
+
 ```{r}
 deltas %>% ggplot(aes(x = substrate, y = delta_pH_norm, color = substrate)) + #, label = pool_number)) + 
   geom_boxplot(alpha = 0.7) + 
@@ -1006,11 +1081,11 @@ deltas %>%
   ggplot(aes(x = delta_pH_norm, y = delta_O2_norm, color = substrate)) + 
   geom_point(size = 2, alpha = 0.7) + 
   geom_smooth(method = "lm", aes(fill = substrate)) + 
-  facet_wrap(~substrate,
-               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
+  #facet_wrap(~substrate,
+  #             labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone"))) +
   theme_bw() + 
-  labs(x = expression(paste(Delta, " pH")), 
-       y = expression(paste(Delta, " Dissolved Oxygen")),
+  labs(x = expression(paste(Delta, " pH ", " h"^-1 )), 
+       y = expression(paste(Delta, " Dissolved Oxygen", " h"^-1 )),
        color = "Substrate") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
@@ -1024,6 +1099,8 @@ deltas %>%
   scale_colour_manual(labels = c("Basalt", "Limestone"), values = c("#5EABD6", "#e75b4a")) +
   scale_fill_manual(values = c("#5EABD6", "#e75b4a")) + 
   guides(fill="none", color = "none")
+
+ggsave(here("Output", "delta_pH_vs_O2.png"), width = 8, height = 6)
 ```
 
 ```{r}
@@ -1086,7 +1163,7 @@ deltas %>% ggplot(aes(x = delta_pH, y = NEC)) +
 ```
 
 ```{r}
-deltas %>% ggplot(aes(x = mean_pH, y = NEC)) + 
+deltas %>% ggplot(aes(x = mean_pH, y = NEC, color = substrate)) + 
   geom_point() + 
   geom_smooth(method = "lm") +
   #facet_wrap(~substrate) +
@@ -1100,22 +1177,31 @@ deltas %>% ggplot(aes(x = mean_pH, y = NEC)) +
 ```{r}
 # committee meeting 
 deltas %>% 
-  filter(!pool_number == "ocean") %>% 
-  ggplot(aes(x = delta_pH, y = NEC)) + 
-  geom_point(aes(color = substrate)) + 
-  geom_smooth(method = "lm", color = "gray30") +
+  #filter(date == "2026-02-28") %>%
+  filter(!pool_number %in% c("ocean")) %>% 
+  ggplot(aes(x = delta_pH_norm, y = NEC, color = substrate, shape = substrate)) + 
+  geom_point(size = 3, alpha = 0.7) + 
+  geom_smooth(method = "lm") +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
   theme_bw() +
-  theme(axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)) + 
-  labs(y = expression(paste("NEC (mmol m"^-2," h"^-1,")")),
-       x = expression(paste(Delta, " pH")),
-       color = "Substrate") +
-  scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
+  theme(axis.text = element_text(size = 18),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 20),
+        plot.margin = margin(0.5, 0.5, 0, 0.2, "cm")) + 
+  
+
+  labs(y = expression(paste("NCC (mmol m"^-2," h"^-1,")")),
+       x = expression(paste(Delta, " pH")) ) + #, 
+  #     color = "Substrate", shape = "Substrate") +
+ #scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#1A85FF", "#D41159")) +
+  scale_color_manual(values = c("#1A85FF", "#D41159")) #+
+  #guides(color = "none", shape = "none")
+  # c("#F8766D", "#00BA38") --> red and green
+  #scale_shape(labels = c("Basalt", "Limestone")) +
+  #guides(color = guide_legend(override.aes = list(linetype = 0, fill = NA)))
 
 ggsave(here("Output", "delta_pH_vs_NEC.png"), width = 8, height = 6)
 ```
@@ -1147,7 +1233,41 @@ deltas %>% ggplot(aes(x = NEP, y = mean_pH)) +
 # committee meeting
 deltas %>% 
   filter(!pool_number == "ocean") %>% 
-  ggplot(aes(x = NEP, y = delta_pH)) + 
+  ggplot(aes(x = NEP, y = delta_pH_norm, color = substrate)) + 
+  geom_point(size = 3, alpha = 0.6) + 
+  geom_smooth(method = "lm") +
+  #facet_wrap(~substrate) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 18),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 20),
+        plot.margin = margin(0.5, 0.6, 0, 0.2, "cm")) + 
+  
+  
+  
+  labs(x = expression(paste("Net Community Production (mmol m"^-2," h"^-1,")")),
+       y = expression(paste(Delta, " pH", " h"^-1 )), 
+       color = "Substrate") +
+  scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#1A85FF", "#D41159")) #+
+  #scale_color_manual(values = c("#1A85FF", "#D41159")) +
+  #guides(color = "none")
+  # c("#F8766D", "#00BA38") --> red and green
+  #scale_shape(labels = c("Basalt", "Limestone")) +
+  #guides(color = guide_legend(override.aes = list(linetype = 0, fill = NA)))
+
+
+ggsave(here("Output", "NEP_vs_delta_pH.png"), width = 8, height = 6)
+```
+
+#### Delta Temp vs NEP
+
+```{r}
+deltas %>% 
+  filter(!pool_number == "ocean") %>% 
+  ggplot(aes(x = delta_temp, y = NEC)) + 
   geom_point(aes(color = substrate)) + 
   geom_smooth(method = "lm", color = "gray30") +
   #facet_wrap(~substrate) +
@@ -1158,13 +1278,13 @@ deltas %>%
         axis.title = element_text(size = 14),
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 12)) + 
-  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
-       y = expression(paste(Delta, " pH")),
+  labs(y = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
+       x = expression(paste(Delta, " Temperature")),
        color = "Substrate") +
   scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
-
-ggsave(here("Output", "NEP_vs_delta_pH.png"), width = 8, height = 6)
 ```
+
+
 
 #### NEP / NEC
 ```{r}
@@ -1182,21 +1302,32 @@ deltas %>% ggplot(aes(x = NEP, y = NEC)) +
 ```{r}
 deltas %>% 
   filter(!pool_number == "ocean") %>%
-  ggplot(aes(x = NEP, y = NEC)) + 
-  geom_point(aes(color = substrate)) + 
-  geom_smooth(method = "lm", color = "gray30") +
+  ggplot(aes(x = NEP, y = NEC, color = substrate)) + 
+  geom_point(size = 3, alpha = 0.6) + 
+  geom_smooth(method = "lm") +
   #facet_wrap(~substrate) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
   theme_bw() +
-  theme(axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)) +
-  labs(x = expression(paste("NEP (mmol m"^-2," h"^-1,")")),
-       y = expression(paste("NEC (mmol m"^-2," h"^-1,")")),
-      color = "Substrate") +
-  scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#F8766D", "#00BA38"))
+  theme(axis.text = element_text(size = 18),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 20),
+        plot.margin = margin(0.5, 0.6, 0, 0.2, "cm")) + 
+  
+  
+  
+  labs(x = expression(paste("Net Community Production (mmol m"^-2," h"^-1,")")),
+       y = expression(paste("Net Community Calcification (mmol m"^-2," h"^-1,")")) ) + #, 
+  #     color = "Substrate", shape = "Substrate") +
+  #scale_color_manual(labels = c("Basalt", "Limestone"), values = c("#1A85FF", "#D41159")) +
+  scale_color_manual(values = c("#1A85FF", "#D41159")) +
+  guides(color = "none")
+  # c("#F8766D", "#00BA38") --> red and green
+  #scale_shape(labels = c("Basalt", "Limestone")) +
+  #guides(color = guide_legend(override.aes = list(linetype = 0, fill = NA)))
+
+
 
 ggsave(here("Output", "NEP_vs_NEC.png"), width = 8, height = 6)
 ```
@@ -1205,7 +1336,7 @@ ggsave(here("Output", "NEP_vs_NEC.png"), width = 8, height = 6)
 
 ```{r}
 data %>% #filter(!substrate %in% "ocean") %>% 
-  ggplot(aes(x = pH, y = OmegaAragonite, color = substrate)) + 
+  ggplot(aes(x = pH_insitu, y = OmegaAragonite, color = substrate)) + 
   geom_point() + 
   coord_trans(y = "log")+
   facet_wrap(~substrate,
@@ -1222,7 +1353,7 @@ data %>% #filter(!substrate %in% "ocean") %>%
 
 ```{r}
 data %>% #filter(!substrate %in% "ocean") %>% 
-  ggplot(aes(x = pH, y = OmegaAragonite, color = substrate)) + 
+  ggplot(aes(x = pH_insitu, y = OmegaAragonite, color = substrate)) + 
   geom_point() + 
   coord_trans(y = "log")+
   #facet_wrap(~substrate,
@@ -1243,7 +1374,7 @@ ggsave(here("Output", "OmegaArag_vs_pH.png"), width = 6, height = 4)
 
 
 ```{r}
-arag_ph_mod <- lm(OmegaAragonite ~ pH*substrate, data) 
+arag_ph_mod <- lm(OmegaAragonite ~ pH_insitu*substrate, data) 
 Anova(arag_ph_mod)
 summary(arag_ph_mod)
 ```
@@ -1252,7 +1383,7 @@ summary(arag_ph_mod)
 
 ```{r}
 data %>% #filter(!substrate %in% "ocean") %>% 
-  ggplot(aes(x = pH, y = OmegaCalcite, color = substrate)) + 
+  ggplot(aes(x = pH_insitu, y = OmegaCalcite, color = substrate)) + 
   geom_point() + 
   coord_trans(y = "log")+
   facet_wrap(~substrate,
@@ -1268,7 +1399,7 @@ data %>% #filter(!substrate %in% "ocean") %>%
 ```
 ```{r}
 data %>% #filter(!substrate %in% "ocean") %>% 
-  ggplot(aes(x = pH, y = OmegaCalcite, color = substrate)) + 
+  ggplot(aes(x = pH_insitu, y = OmegaCalcite, color = substrate)) + 
   geom_point() + 
   coord_trans(y = "log")+
   #facet_wrap(~substrate,
@@ -1288,7 +1419,7 @@ ggsave(here("Output", "OmegaCalc_vs_pH.png"), width = 6, height = 4)
 
 
 ```{r}
-calc_ph_mod <- lm(OmegaCalcite ~ pH*substrate, data) 
+calc_ph_mod <- lm(OmegaCalcite ~ pH_insitu*substrate, data) 
 Anova(calc_ph_mod)
 summary(calc_ph_mod)
 ```
@@ -1349,9 +1480,10 @@ data %>%
 ### pH Residuals
 Fit regression for both substrate types combined
 ```{r}
-pH_mod <- lm(((pH*temp_field)/(mean(data$temp_field))) ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
-#pH_mod <- lm(pH ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
+#pH_mod <- lm(((pH_insitu*temp_field)/(mean(data$temp_field))) ~ sample_time*substrate, data = (data %>% filter(!substrate == "ocean")))
+pH_mod <- lm(pH_insitu ~ sample_time*substrate, data = (data %>% filter(!substrate == "ocean")))
 summary(pH_mod)
+anova(pH_mod)
 ```
 
 
@@ -1484,6 +1616,100 @@ summary(delta_pH_comp_benthic)
 ```{r}
 delta_pH_comp_mobile <- lm(delta_pH ~ inv_producer_pcover, deltas)
 summary(delta_pH_comp_mobile)
+```
+
+
+
+### Mean pH
+
+```{r}
+mean_pH_comp <- lm(mean_pH ~ total_producer_pcover, deltas)
+summary(mean_pH_comp)
+```
+
+```{r}
+mean_pH_comp_benthic <- lm(mean_pH ~ producer_pcover, deltas)
+summary(mean_pH_comp_benthic)
+```
+
+```{r}
+mean_pH_comp_mobile <- lm(mean_pH ~ inv_producer_pcover, deltas)
+summary(mean_pH_comp_mobile)
+```
+
+
+
+
+
+### BUOYS
+
+Average pH 
+```{r}
+max_pH_data <- data %>% 
+  group_by(substrate, pool_number) %>% 
+  summarise(max_pH = max(pH_insitu)) %>%
+          #se_pH = sd(pH_insitu, na.rm = TRUE) / sqrt(n())) %>%
+  #distinct(substrate, .keep_all = TRUE) %>% 
+  select(substrate, max_pH) %>%
+  filter(!substrate %in% "ocean")
+
+t.test(max_pH ~ substrate, max_pH_data)
+```
+
+
+
+```{r}
+pH_NEP <- lm(delta_pH_norm ~ NEP*substrate, deltas)
+summary(pH_NEP)
+anova(pH_NEP)
+
+coef(pH_NEP)
+
+means_pHNEP <- emmeans(pH_NEP, ~ substrate) # gives average delta pH at each substrate
+print(means_pHNEP)
+
+slopes_pHNEP <- emtrends(pH_NEP, ~ "substrate", var = "NEP")
+print(slopes_pHNEP)
+pairs(slopes_pHNEP)
+
+emm_intercepts_pHNEP <- emmeans(pH_NEP, "substrate", at = list(NEP = 0))
+print(emm_intercepts_pHNEP)
+pairs(emm_intercepts_pHNEP)
+```
+
+```{r}
+NEC_pH <- lm(NEC ~ delta_pH_norm*substrate, deltas)
+summary(NEC_pH)
+Anova(NEC_pH)
+
+means_NECpH <- emmeans(NEC_pH, ~ substrate) # gives average NEC at each substrate
+print(means_NECpH)
+pairs(means_NECpH)
+
+
+slopes_NECpH <- emtrends(NEC_pH, ~ "substrate", var = "delta_pH_norm")
+print(slopes_NECpH)
+pairs(slopes_NECpH)
+
+emm_intercepts_NECpH <- emmeans(NEC_pH, "substrate", at = list(delta_pH = 0))
+print(emm_intercepts_NECpH)
+pairs(emm_intercepts_NECpH)
+```
+
+```{r}
+NEC_NEP <- lm(NEC ~ NEP*substrate, deltas)
+summary(NEC_NEP)
+Anova(NEC_NEP)
+
+
+slopes_NECNEP <- emtrends(NEC_NEP, ~ "substrate", var = "NEP")
+print(slopes_NECNEP)
+pairs(slopes_NECNEP)
+
+emm_intercepts_NECNEP <- emmeans(NEC_NEP, "substrate", at = list(NEP = 0))
+print(emm_intercepts_NECNEP)
+pairs(emm_intercepts_NECNEP)
+
 ```
 
 

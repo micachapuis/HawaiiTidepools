@@ -36,6 +36,13 @@ Make a column for month
 benthic$month <- month(benthic$date, label = TRUE)
 ```
 
+Change Sandy's 2026/03/01 to February for easier comparison to basalt
+```{r}
+benthic <- benthic %>%  mutate(month = case_when(month == "Mar" ~ "Feb",
+                                                 TRUE ~ month))
+```
+
+
 
 ```{r}
 benthic_long <- benthic %>%
@@ -174,6 +181,63 @@ benthic_categories %>%
       guides(color = "none")  + # keep only legend for fill since fill and color are the same
       theme_minimal() 
 ```
+
+
+Benthic Broad Categories (BUOYS)
+
+Calculate percent cover by category
+```{r}
+benthic_broad_categories <- benthic_categories %>%
+                             mutate(cat_percent_cover = (num_points/total_points)*100) %>%
+                             select(-c(total_points, id, num_points, production, calcification, category_name)) %>%
+                             group_by(date, site, water_date, pool_number, substrate, broad_category) %>%
+                             mutate(cat_percent_cover = sum(cat_percent_cover)) %>%
+                             distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+```
+
+
+Make categories into factor
+```{r}
+benthic_broad_categories$broad_category <- factor(benthic_broad_categories$broad_category)
+```
+
+```{r}
+benthic_broad_categories %>% 
+  filter(!pool_number %in% c(27, 30)) %>%
+  filter(month %in% c("Aug", "Feb")) %>%
+  filter(broad_category %in% c("Biofilm", "CCA", "Macroalgae", "Turf/Cyanobacteria")) %>%
+   group_by(substrate, month, broad_category) %>% 
+  summarise(avg_cat_percent_cover = mean(cat_percent_cover)) %>%
+  group_by(substrate, broad_category) %>%
+  summarise(avg_cat_percent_cover = mean(avg_cat_percent_cover)) %>%
+  ggplot(aes(x = substrate,
+              y = avg_cat_percent_cover, 
+              fill= broad_category, 
+              color= broad_category)) + # set lines surrounding each color to match the fill colors
+      geom_bar(stat="identity") + # stacked bars
+    # facet_wrap(~month) +
+  
+      labs(x = "Substrate", # labels
+           y="Percent Cover",
+           fill = "Producer")  +
+  
+      guides(color = "none")  + # keep only legend for fill since fill and color are the same
+      theme_bw() +
+  
+    theme(axis.text = element_text(size = 18),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 20)) + 
+      scale_fill_manual(values = c('#56B4E9', '#CC79A7', '#009E73', '#E69F00')) +
+     scale_color_manual(values = c('#56B4E9', '#CC79A7', '#009E73', '#E69F00')) +
+    scale_x_discrete(labels= c("Basalt", "Limestone"))
+
+
+ggsave(here("Output", "producer_cover.png"), width = 8, height = 6)
+```
+
+
+
 
 Benthic Calcifiers
 ```{r}
