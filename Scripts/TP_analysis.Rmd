@@ -34,8 +34,8 @@ fdom <- read_csv(here("Data", "fDOM_indices.csv"))
 
 community_comp <- read_csv(here("Data", "comm_comp_summary.csv"))
 
-kb_wind <- read_csv(here("Data", "Climate", "KB_0551_20250101_20260305.csv"))
-sb_wind <- read_csv(here("Data", "Climate", "SB_0531_20250101_20260223.csv"))
+kb_wind <- read_csv(here("Data", "Climate", "KB_0551_20250101_20260511.csv"))
+sb_wind <- read_csv(here("Data", "Climate", "SB_0531_20250101_20260511.csv"))
 ```
 
 
@@ -840,7 +840,7 @@ data %>% filter(site %in% "Sandy Beach") %>% ggplot(aes(x = sample_time, y = dis
 ```{r}
 data %>% ggplot(aes(x = sample_time, y = dissolved_oxygen)) +
     facet_wrap(~substrate) +
-  geom_smooth(method = "lm", se=FALSE) + 
+  geom_smooth(method = "gam", se=FALSE) + 
   geom_point() + 
   theme_minimal() + 
   labs(title = "DO")  +
@@ -898,13 +898,20 @@ ggsave(here("Output", "oxygen_sat_over_time.png"), width = 8, height = 6)
 
 ### Deltas
 
-Delta Temp vs Delta pH
+####Delta Temp vs Delta pH, NEP, NEC
 ```{r}
-deltas %>% filter(!site %in% "Diamond Head") %>% ggplot(aes(x = delta_temp, y = delta_pH, color = site)) + geom_point()
+deltas %>% filter(!site %in% "Diamond Head") %>% ggplot(aes(x = delta_temp, y = delta_pH, color = substrate)) + geom_point() + facet_wrap(~substrate)
 ```
 
+```{r}
+deltas %>% filter(!site %in% "Diamond Head") %>% ggplot(aes(x = delta_temp, y = NEP, color = substrate)) + geom_point() + facet_wrap(~substrate)
+```
 
+```{r}
+deltas %>% filter(!site %in% "Diamond Head") %>% ggplot(aes(x = delta_temp, y = NEC, color = substrate)) + geom_point() + facet_wrap(~substrate)
+```
 
+#### Delta pH and TA by substrate
 ```{r}
 deltas %>% ggplot(aes(x = substrate, y = delta_pH_norm, color = substrate)) + #, label = pool_number)) + 
   geom_boxplot(alpha = 0.7) + 
@@ -994,6 +1001,7 @@ data %>%
   theme_bw() + 
   labs(x = "pH", y = "Total Alkalinity") 
 ```
+
 ```{r}
 # committee meeting figure
 deltas %>% 
@@ -1142,8 +1150,8 @@ data %>%
   ggplot(aes(x = DIC, y = TA, color = substrate)) +
   geom_point(alpha = 0.8) +
   geom_smooth(method = "lm",se = FALSE) +
-  facet_wrap(~substrate, scales = "free_x",
-               labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
+  #facet_wrap(~substrate, scales = "free_x",
+  #             labeller = as_labeller(c(basalt = "Basalt", limestone = "Limestone", ocean = "Ocean"))) +
   guides(color = "none") +
   labs(x = expression(paste("DIC (",mu,"mol kg"^-1,")")),
        y = expression(paste("TA (",mu,"mol kg"^-1,")"))) +
@@ -1335,7 +1343,7 @@ ggsave(here("Output", "NEP_vs_NEC.png"), width = 8, height = 6)
 ### Aragonite Saturation State
 
 ```{r}
-data %>% #filter(!substrate %in% "ocean") %>% 
+data %>% filter(!site %in% "Diamond Head") %>% 
   ggplot(aes(x = pH_insitu, y = OmegaAragonite, color = substrate)) + 
   geom_point() + 
   coord_trans(y = "log")+
@@ -1350,6 +1358,19 @@ data %>% #filter(!substrate %in% "ocean") %>%
 #ggsave(here("Output", "OmegaArag_vs_pH.png"), width = 8, height = 4)
 
 ```
+```{r}
+data %>% filter(site %in% "Kaihalulu Beach") %>% 
+  ggplot(aes(x = pH_insitu, y = OmegaAragonite, color = producer_pcover)) + 
+  geom_point() + 
+  coord_trans(y = "log")+
+  facet_wrap(~pool_number) +
+  labs(y = expression(paste(Omega ['Aragonite']))) +
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16)) +
+  theme_bw()
+```
+
+
 
 ```{r}
 data %>% #filter(!substrate %in% "ocean") %>% 
@@ -1551,30 +1572,31 @@ data_resid_pH %>%
 ### TA Residuals
 Fit regression for both substrate types combined
 ```{r}
-TA_mod <- lm(TA ~ sample_time, data = (data %>% filter(!substrate == "ocean")))
+TA_mod <- lm(TA ~ sample_time, data = (data %>% filter(!substrate == "ocean") %>% filter(!time_point == 2.5)))
 summary(TA_mod)
 ```
 
 ```{r}
-data_resid_TA <- augment(TA_mod, (data %>% filter(!substrate == "ocean")))
+#commenting out bc error
+data_resid_TA <- augment(TA_mod, (data %>% filter(!substrate == "ocean") %>% filter(!time_point == 2.5)))
 ```
 
 ```{r}
 resid_TA <- lm(.resid ~ substrate, data_resid_TA)
-summary(resid_TA)
-Anova(resid_TA)
+#summary(resid_TA)
+#Anova(resid_TA)
 ```
 
 ```{r}
 resid_TA_comp <- lm(.resid ~ total_calcifying_pcover, data_resid_TA)
-summary(resid_TA_comp)
-Anova(resid_TA_comp)
+#summary(resid_TA_comp)
+#Anova(resid_TA_comp)
 ```
 
 ```{r}
 resid_TA_comp_benthic <- lm(.resid ~ calcifying_pcover, data_resid_TA)
-summary(resid_TA_comp_benthic)
-Anova(resid_TA_comp_benthic)
+#summary(resid_TA_comp_benthic)
+#Anova(resid_TA_comp_benthic)
 ```
 
 ```{r}
