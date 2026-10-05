@@ -36,6 +36,8 @@ community_comp <- read_csv(here("Data", "comm_comp_summary.csv"))
 
 kb_wind <- read_csv(here("Data", "Climate", "KB_0551_20250101_20260511.csv"))
 sb_wind <- read_csv(here("Data", "Climate", "SB_0531_20250101_20260511.csv"))
+
+hobo_temp <- read_csv(here("Data", "HOBO", "tidepool_hobo.csv"))
 ```
 
 
@@ -174,7 +176,7 @@ data <- bind_rows(data, testdata)
 
 Remove Pools 1 and 17 (suspected groundwater)
 ```{r}
-data <- data %>% filter(!(pool_number %in% c(1, 17)))
+#data <- data %>% filter(!(pool_number %in% c(1, 17)))
 ```
 
 ```{r}
@@ -1734,4 +1736,24 @@ pairs(emm_intercepts_NECNEP)
 
 ```
 
+
+## HOBOs
+```{r}
+#KB
+data %>% filter(site %in% "Kaihalulu Beach") %>% group_by(pool_number, sample_time) %>% summarize(max_temp = max(temp_pool)) %>% arrange(desc(max_temp)) %>% view()
+```
+
+```{r}
+#SB
+data %>% filter(site %in% "Sandy Beach") %>% filter(date > "2025-06-20") %>% group_by(pool_number) %>% summarize(max_temp = max(temp_pool)) %>% arrange(desc(max_temp)) %>% view()
+```
+
+```{r}
+hobo_temp$datetime <- mdy_hms(hobo_temp$date_time) 
+```
+
+
+```{r}
+hobo_temp %>% ggplot(aes(x = datetime, y = temperature)) + geom_point() + facet_wrap(~pool_number, nrow =3 )
+```
 

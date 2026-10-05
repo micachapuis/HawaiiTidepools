@@ -42,6 +42,13 @@ Make a column for month
 benthic$month <- month(benthic$date, label = TRUE)
 ```
 
+Change Sandy’s 2026/03/01 to February for easier comparison to basalt
+
+``` r
+benthic <- benthic %>%  mutate(month = case_when(month == "Mar" ~ "Feb",
+                                                 TRUE ~ month))
+```
+
 ``` r
 benthic_long <- benthic %>%
   select(-c("notes":"observers")) %>%
@@ -92,7 +99,7 @@ benthic_long %>% ggplot(aes(x= factor(pool_number),
       guides(color = "none") #+ # keep only legend for fill since fill and color are the same
 ```
 
-![](TP_community_composition_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](TP_community_composition_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
 #      scale_fill_manual(values = c('#e6194b', '#3cb44b', "lightblue", '#4363d8', '#f58231', '#000075', '#46f0f0', '#f032e6', '#fabebe', '#800000', '#008080',  '#e6beff', '#aaffc3', '#ffe119' , '#808000')) +
@@ -148,7 +155,11 @@ benthic_categories %>%
       scale_color_manual(values = c('gray75', 'gray30', '#ffe119', '#4363d8', "hotpink", '#aaffc3', '#f58231', '#e6194b', '#3cb44b', "#7C4585"))
 ```
 
-![](TP_community_composition_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+    ## Warning in min(x): no non-missing arguments to min; returning Inf
+
+    ## Warning in max(x): no non-missing arguments to max; returning -Inf
+
+![](TP_community_composition_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 Benthic Producers Calculate percent cover for producer/non-producers
 
@@ -189,7 +200,76 @@ benthic_categories %>%
       theme_minimal() 
 ```
 
-![](TP_community_composition_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+    ## Warning in min(x): no non-missing arguments to min; returning Inf
+
+    ## Warning in max(x): no non-missing arguments to max; returning -Inf
+
+![](TP_community_composition_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+Benthic Broad Categories (BUOYS)
+
+Calculate percent cover by category
+
+``` r
+benthic_broad_categories <- benthic_categories %>%
+                             mutate(cat_percent_cover = (num_points/total_points)*100) %>%
+                             select(-c(total_points, id, num_points, production, calcification, category_name)) %>%
+                             group_by(date, site, water_date, pool_number, substrate, broad_category) %>%
+                             mutate(cat_percent_cover = sum(cat_percent_cover)) %>%
+                             distinct(date, site, water_date, pool_number, substrate, .keep_all = TRUE)  # Ensure only one row per pool
+```
+
+Make categories into factor
+
+``` r
+benthic_broad_categories$broad_category <- factor(benthic_broad_categories$broad_category)
+```
+
+``` r
+benthic_broad_categories %>% 
+  filter(!pool_number %in% c(27, 30)) %>%
+  filter(month %in% c("Aug", "Feb")) %>%
+  filter(broad_category %in% c("Biofilm", "CCA", "Macroalgae", "Turf/Cyanobacteria")) %>%
+   group_by(substrate, month, broad_category) %>% 
+  summarise(avg_cat_percent_cover = mean(cat_percent_cover)) %>%
+  group_by(substrate, broad_category) %>%
+  summarise(avg_cat_percent_cover = mean(avg_cat_percent_cover)) %>%
+  ggplot(aes(x = substrate,
+              y = avg_cat_percent_cover, 
+              fill= broad_category, 
+              color= broad_category)) + # set lines surrounding each color to match the fill colors
+      geom_bar(stat="identity") + # stacked bars
+    # facet_wrap(~month) +
+  
+      labs(x = "Substrate", # labels
+           y="Percent Cover",
+           fill = "Producer")  +
+  
+      guides(color = "none")  + # keep only legend for fill since fill and color are the same
+      theme_bw() +
+  
+    theme(axis.text = element_text(size = 18),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 20)) + 
+      scale_fill_manual(values = c('#56B4E9', '#CC79A7', '#009E73', '#E69F00')) +
+     scale_color_manual(values = c('#56B4E9', '#CC79A7', '#009E73', '#E69F00')) +
+    scale_x_discrete(labels= c("Basalt", "Limestone"))
+```
+
+    ## `summarise()` has regrouped the output.
+    ## `summarise()` has regrouped the output.
+    ## ℹ Summaries were computed grouped by substrate, month, and broad_category.
+    ## ℹ Output is grouped by substrate and month.
+    ## ℹ Use `summarise(.groups = "drop_last")` to silence this message.
+    ## ℹ Use `summarise(.by = c(substrate, month, broad_category))` for per-operation
+    ##   grouping (`?dplyr::dplyr_by`) instead.
+
+![](TP_community_composition_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+``` r
+ggsave(here("Output", "producer_cover.png"), width = 8, height = 6)
+```
 
 Benthic Calcifiers
 
@@ -230,7 +310,11 @@ benthic_categories %>%
       theme_minimal() 
 ```
 
-![](TP_community_composition_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+    ## Warning in min(x): no non-missing arguments to min; returning Inf
+
+    ## Warning in max(x): no non-missing arguments to max; returning -Inf
+
+![](TP_community_composition_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ## Mobile
 
@@ -326,7 +410,11 @@ mobile_categories_pcover %>%
   facet_grid(month~substrate, scale = "free_x") 
 ```
 
-![](TP_community_composition_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+    ## Warning in min(x): no non-missing arguments to min; returning Inf
+
+    ## Warning in max(x): no non-missing arguments to max; returning -Inf
+
+![](TP_community_composition_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 Community Composition Summary (Producer and Calcifier percent cover and
 density by pool)
@@ -335,13 +423,13 @@ density by pool)
 comm_comp_summary <- list(benthic_prod_wide, benthic_calc_wide, mobile_prod_wide, mobile_calc_wide) %>% reduce(left_join)
 ```
 
-    ## Joining with `by = join_by(date, site, water_date, pool_number, substrate,
-    ## month, avg_diameter_or_length_cm, other_dimension_cm, surface_area_cm2,
-    ## surface_area_m2)`
-    ## Joining with `by = join_by(date, site, water_date, pool_number, substrate,
-    ## month)`
-    ## Joining with `by = join_by(date, site, water_date, pool_number, substrate,
-    ## month)`
+    ## Joining with `by = join_by(pool_number, date, site, water_date, substrate,
+    ## month, broad_category, avg_diameter_or_length_cm, other_dimension_cm,
+    ## surface_area_cm2, surface_area_m2)`
+    ## Joining with `by = join_by(pool_number, date, site, water_date, substrate,
+    ## month, broad_category)`
+    ## Joining with `by = join_by(pool_number, date, site, water_date, substrate,
+    ## month, broad_category)`
 
 ``` r
 comm_comp_summary <- as.data.frame(comm_comp_summary) %>%
@@ -379,10 +467,10 @@ comm_comp_summary_long %>%
       theme_minimal() 
 ```
 
-    ## Warning: Removed 6 rows containing missing values or values outside the scale range
+    ## Warning: Removed 410 rows containing missing values or values outside the scale range
     ## (`geom_bar()`).
 
-![](TP_community_composition_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](TP_community_composition_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 ``` r
 comm_comp_summary_long %>%
@@ -402,10 +490,10 @@ comm_comp_summary_long %>%
       theme_minimal() 
 ```
 
-    ## Warning: Removed 6 rows containing missing values or values outside the scale range
+    ## Warning: Removed 410 rows containing missing values or values outside the scale range
     ## (`geom_bar()`).
 
-![](TP_community_composition_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](TP_community_composition_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 ``` r
 write.csv(comm_comp_summary, here("Data", "comm_comp_summary.csv"))
